@@ -17,7 +17,7 @@ To explore more parameters, run
 python pacman.py -h 
 ```
 
-The main algorithm is implemented in the file multiAgents.py. One can also refer to the https://inst.eecs.berkeley.edu/~cs188/sp21/project2/ for other details.
+The main algorithm is implemented in the file multiAgents.py. One can also refer to the https://inst.eecs.berkeley.edu/~cs188/sp21/project2/ for more details.
 
 ## Acknowledgement
 
