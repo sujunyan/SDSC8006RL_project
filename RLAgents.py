@@ -1,15 +1,12 @@
+"""
+In this file, we implement our agent with Reinforcement Learning technique
+"""
+
 from pacman import GameState
 from game import Agent
 from util import manhattanDistance
 from game import Directions
 import random, util
-
-
-
-"""
-In this file, we implement our agent with Reinforcement Learning technique
-"""
-
 
 class MDPState:
     """
