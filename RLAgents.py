@@ -8,26 +8,6 @@ from util import manhattanDistance
 from game import Directions
 import random, util
 
-class MDPState:
-    """
-    The original hash function of gameState including scores which is useless in our MDP setting. So in this function, we convert the gameState to a tuple of data we really care.
-    This class serves as a wrapper for gameState class
-    """
-    def __init__(self, gameState) -> None:
-        self.gameState = gameState
-
-    def __hash__(self) -> int:
-        """
-        The hash function so that this class can be a key in a dict
-        """
-        state = (
-                self.gameState.getPacmanPosition(),
-                self.gameState.getGhostPositions(),
-                self.gameState.getCapsules(),
-                self.gameState.getFood())
-        return hash(state)
-
-
 class RLAgent(Agent):
     """
     This class provides some common elements to all of our Reinforcement Learning agents.
@@ -43,6 +23,18 @@ class RLAgent(Agent):
         self.numTraining = numTraining
         #self.evaluationFunction = util.lookup(evalFn, globals())
         #self.depth = int(depth)
+    def convertState(self, gameState):
+        """
+        The original hash function of gameState including scores which is useless in our MDP setting. 
+        So in this function, we convert the gameState to a tuple of data we really care.
+        """
+        state = (
+            gameState.getPacmanPosition(),
+            gameState.getGhostPositions(),
+            gameState.getCapsules(),
+            gameState.getFood())
+        return state
+
 
 
 class MonteCarloAgent(RLAgent):
@@ -55,17 +47,26 @@ class MonteCarloAgent(RLAgent):
         super().__init__(numTraining=numTraining) # call initialize function of the parent class
         # the pol
         self.eps = eps # The parameter used in \epsilon greedy exploration
-        print(self.eps)
-        # the policy pi, which is a dict from MDPState to an action
+        # the policy pi, which is a dict from state to an action
         self.pi = {}
-        # the action-value function , which is a dict from (MDPState,action) to a real number
+        # the action-value function , which is a dict from (MDPState) to a (action,score)
         self.Q = {}
 
     def getAction(self, gameState):
         """
         """
-        print(self.convertState(gameState))
-        util.raiseNotDefined()
+
+        legalMoves = gameState.getLegalActions()
+        #print(legalMoves)
+        return legalMoves[0]
+        #print(self.convertState(gameState))
+
+    def final(self, gameState):
+        """
+        final has been reached, we collect an episode now,
+        let us update the policy accordingly
+        """
+        print("final reached")
 
     
         

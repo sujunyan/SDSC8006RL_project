@@ -16,7 +16,8 @@
         "--numTraining","5",
         "--numGames","10",
         "--agentArgs","eps=1e-3",
-        "-q",
+        "--quietTextGraphics",
+        "--fixRandomSeed"
       ],
       "console": "integratedTerminal"
     }
