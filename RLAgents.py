@@ -1,3 +1,4 @@
+from pacman import GameState
 from game import Agent
 from util import manhattanDistance
 from game import Directions
@@ -8,6 +9,27 @@ import random, util
 """
 In this file, we implement our agent with Reinforcement Learning technique
 """
+
+
+class MDPState:
+    """
+    The original hash function of gameState including scores which is useless in our MDP setting. So in this function, we convert the gameState to a tuple of data we really care.
+    This class serves as a wrapper for gameState class
+    """
+    def __init__(self, gameState) -> None:
+        self.gameState = gameState
+
+    def __hash__(self) -> int:
+        """
+        The hash function so that this class can be a key in a dict
+        """
+        state = (
+                self.gameState.getPacmanPosition(),
+                self.gameState.getGhostPositions(),
+                self.gameState.getCapsules(),
+                self.gameState.getFood())
+        return hash(state)
+
 
 class RLAgent(Agent):
     """
@@ -25,15 +47,6 @@ class RLAgent(Agent):
         #self.evaluationFunction = util.lookup(evalFn, globals())
         #self.depth = int(depth)
 
-    def convertState(self, gameState):
-        """
-        The original hash function of gameState including scores which is useless in our MDP setting. So in this function, we convert the gameState to a tuple of data we really care.
-        """
-        return (gameState.getPacmanPosition(),
-                gameState.getGhostPositions(),
-                gameState.getCapsules(),
-                gameState.getFood())
-
 
 class MonteCarloAgent(RLAgent):
     """
@@ -46,7 +59,9 @@ class MonteCarloAgent(RLAgent):
         # the pol
         self.eps = eps # The parameter used in \epsilon greedy exploration
         print(self.eps)
+        # the policy pi, which is a dict from MDPState to an action
         self.pi = {}
+        # the action-value function , which is a dict from (MDPState,action) to a real number
         self.Q = {}
 
     def getAction(self, gameState):
