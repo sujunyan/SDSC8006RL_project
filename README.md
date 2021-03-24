@@ -10,7 +10,7 @@ python pacman.py
 ```
 To use an example agent, run
 ```
-python pacman.py -p ReflexAgent
+python pacman.py -p ReflexAgent -l smallClassic
 ```
 To explore more parameters, run
 ```
