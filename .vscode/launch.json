@@ -1,0 +1,24 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      //"program": "${file}",
+      "program": "pacman.py",
+      "args": [
+        "-l","smallClassic",
+        "-p","MonteCarloAgent",
+        "--numTraining","5",
+        "--numGames","10",
+        "--agentArgs","eps=1e-3",
+        "-q",
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}
