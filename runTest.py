@@ -69,6 +69,7 @@ def plotGames(games):
     for i in range(nGames):
         #iend = min(i+window,nGames)
         scoreToLookAt = scores[0:i]
+        #scoreToLookAt = scores[i:iend]
         avgScoreList.append(np.mean(scoreToLookAt))
     plt.plot(avgScoreList)
     plt.xlabel("number of games")
