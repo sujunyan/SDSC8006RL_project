@@ -43,13 +43,16 @@ class RLAgent(Agent):
 class MonteCarloAgent(RLAgent):
     """
     Use Monte Carlo Control to play the pacman game
-    Refer to the lesson slide 6: Model free control (11-19)
+    Refer to the lesson slide 6: Model free control (11-23)
+    Try the GLIE version
     """
 
-    def __init__(self, numTraining = 0, eps=1e-2, gamma = 0.99):
+    def __init__(self, numTraining = 0, initEps=1e-2, gamma = 0.99):
         super().__init__(numTraining=numTraining) # call initialize function of the parent class
-        # The parameter used in \epsilon greedy exploration
-        self.eps = float(eps) 
+        # The initial  \epsilon greedy exploration, 
+        # for training index n, we set eps = initEps/n
+        self.initEps = float(initEps) 
+        self.eps = self.initEps
         self.gamma = float(gamma)
         # the policy pi, which is a dict from state to an action
         self.pi = {}
@@ -143,7 +146,7 @@ class MonteCarloAgent(RLAgent):
         self.updateQ(self.episode)
         self.episode = [] # reset the episode to empty
         self.trainIndex += 1
-        print(f"({self.trainIndex}/{self.numTraining}) trained")
+        self.eps = self.initEps/self.trainIndex
 
     
         

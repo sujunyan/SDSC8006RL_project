@@ -4,6 +4,7 @@ for our RL project use
 """
 
 from pacman import readCommand, ClassicGameRules
+import numpy as np
 import sys
 
 def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
@@ -15,6 +16,7 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
 
 
     for i in range(numGames):
+        print(f"({i}/{numGames}) game start")
         beQuiet = i < numTraining
         if beQuiet:
                 # Suppress output and graphics
@@ -40,6 +42,40 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
             pickle.dump(components, f)
             f.close()
 
+    if (numGames-numTraining) > 0:
+        scores = [game.state.getScore() for game in games]
+        wins = [game.state.isWin() for game in games]
+        winRate = wins.count(True) / float(len(wins))
+        print('Average Score:', sum(scores) / float(len(scores)))
+        #print('Scores:       ', ', '.join([str(score) for score in scores]))
+        print('Win Rate:      %d/%d (%.2f)' %
+              (wins.count(True), len(wins), winRate))
+        #print('Record:       ', ', '.join(
+        #    [['Loss', 'Win'][int(w)] for w in wins]))
+
+    return games
+
+def plotGames(games):
+    """
+    plot games
+    """ 
+
+    import matplotlib.pyplot as plt
+    scores = [game.state.getScore() for game in games]
+    avgScoreList = []
+    nGames = len(games)
+    # only look at the lastest window number of games 
+    window = int(0.1*nGames)
+    for i in range(nGames):
+        #iend = min(i+window,nGames)
+        scoreToLookAt = scores[0:i]
+        avgScoreList.append(np.mean(scoreToLookAt))
+    plt.plot(avgScoreList)
+    plt.xlabel("number of games")
+    plt.ylabel("average score")
+    plt.show()
+        
+
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
@@ -52,7 +88,8 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
     args = readCommand(sys.argv[1:])  # Get game components based on input
-    runGames(**args)
+    games = runGames(**args)
+    plotGames(games)
 
     # import cProfile
     # cProfile.run("runGames( **args )")
