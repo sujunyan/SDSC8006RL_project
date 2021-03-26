@@ -13,11 +13,11 @@
       "args": [
         "-l","smallClassic",
         "-p","MonteCarloAgent",
-        "--numTraining","5",
+        "--numTraining","9",
         "--numGames","10",
-        "--agentArgs","eps=1e-3",
-        "--quietTextGraphics",
-        "--fixRandomSeed"
+        "--agentArgs","eps=1e-2",
+        //"--quietTextGraphics",
+        "--fixRandomSeed",
       ],
       "console": "integratedTerminal"
     }
