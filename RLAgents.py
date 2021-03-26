@@ -40,8 +40,6 @@ class RLAgent(Agent):
             raise Exception("action not legal")
             
 
-
-
 class MonteCarloAgent(RLAgent):
     """
     Use Monte Carlo Control to play the pacman game
@@ -61,6 +59,7 @@ class MonteCarloAgent(RLAgent):
         self.N = {}
         # the list that store one instance of episode, updated in the function self.final
         self.episode = []
+        self.trainIndex = 0 #current traning index
     
     def getQvalue(self, gameState, action):
         """
@@ -135,11 +134,6 @@ class MonteCarloAgent(RLAgent):
             self.Q[key] = ( (N-1)*self.getQvalue(gameState,action) + GList[t]) / N
             #self.Q[key] = ( (N-1)*self.Q[key] + GList[t]) / N
 
-            
-
-        
-        
-
     def final(self, gameState):
         """
         final has been reached, we collect an episode now,
@@ -148,7 +142,8 @@ class MonteCarloAgent(RLAgent):
         self.episode.append((gameState,))
         self.updateQ(self.episode)
         self.episode = [] # reset the episode to empty
-        print("final reached")
+        self.trainIndex += 1
+        print(f"({self.trainIndex}/{self.numTraining}) trained")
 
     
         

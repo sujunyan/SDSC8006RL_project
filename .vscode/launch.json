@@ -9,14 +9,14 @@
       "type": "python",
       "request": "launch",
       //"program": "${file}",
-      "program": "pacman.py",
+      "program": "runTest.py",
       "args": [
         "-l","smallClassic",
         "-p","MonteCarloAgent",
-        "--numTraining","9",
-        "--numGames","10",
+        //"--numTraining","200",
+        "--numGames","300",
         "--agentArgs","eps=1e-2",
-        //"--quietTextGraphics",
+        "--quietTextGraphics",
         "--fixRandomSeed",
       ],
       "console": "integratedTerminal"
