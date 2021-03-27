@@ -28,11 +28,18 @@ class RLAgent(Agent):
         So in this function, we convert the gameState to a tuple of data we really care.
         """
         # list is not hashable, so we convert them to tuples
+        
+        ghostStates = gameState.getGhostStates()
+        ghostPositions = [tuple(g.getPosition()) for g in ghostStates]
+        ghostScaredTimers = [g.scaredTimer for g in ghostStates]
+        capsules = gameState.getCapsules()
         state = (
-            gameState.getPacmanState(),
-            tuple(gameState.getGhostStates()),
-            tuple(gameState.getCapsules()),
-            gameState.getFood())
+            tuple(gameState.getPacmanPosition()),
+            tuple(ghostPositions),
+            tuple(ghostScaredTimers),
+            tuple(capsules),
+            gameState.getFood()
+            )
         #state = gameState
         return state
 
@@ -118,8 +125,6 @@ class MonteCarloAgent(RLAgent):
         else: # if it is not stored yet
             self.N[key] = 1
         return self.N[key]
-
-    
 
     def updateQ(self, episode):
         """
