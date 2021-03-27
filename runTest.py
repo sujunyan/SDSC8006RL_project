@@ -107,7 +107,8 @@ def testMCAgent():
     # eps0 = 10 seems a good choice, this means we need more random samples at the beginning
     args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=0.9999)
     # the simplest layout
-    args['layout'] = layout.getLayout('testClassic')
+    args['layout'] = layout.getLayout('smallGrid')
+    #args['layout'] = layout.getLayout('testClassic')
     # sufficient to see the point start to win
     args['numGames']  = 200
     args['display'] = textDisplay.NullGraphics()
