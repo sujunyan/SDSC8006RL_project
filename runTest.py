@@ -3,6 +3,7 @@ This is a test script which define a custom runGames function
 for our RL project use
 """
 
+import random
 from pacman import readCommand, ClassicGameRules
 import RLAgents
 import layout
@@ -102,11 +103,13 @@ def testMCAgent():
     args = readCommand(sys.argv[1:])  # Get game components based on input
     # manually set the parameters here, please comment it out if you want to set them from command line
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
-    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1,gamma=0.9999)
+    random.seed('sdsc8006')
+    # eps0 = 10 seems a good choice, this means we need more random samples at the beginning
+    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=0.9999)
     # the simplest layout
     args['layout'] = layout.getLayout('testClassic')
-    # 
-    args['numGames']  = 2000 
+    # sufficient to see the point start to win
+    args['numGames']  = 200
     args['display'] = textDisplay.NullGraphics()
     games = runGames(**args)
     plotGames(games)

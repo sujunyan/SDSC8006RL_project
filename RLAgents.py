@@ -78,22 +78,9 @@ class MonteCarloAgent(RLAgent):
             self.Q[key] = 0
             return 0
 
-    def incrementCounter(self, gameState, action):
-        """
-        increment the corresponding counter by one
-        return: the incremented counter
-        """
-        self.checkAction(gameState,action)
-        state = self.convertState(gameState)
-        key = (state,action)
-        if key in self.N:
-            self.N[key] += 1
-        else: # if it is not stored yet
-            self.N[key] = 1
-        return self.N[key]
-
     def getAction(self, gameState):
         """
+        get the action 
         """
         legalMoves = gameState.getLegalActions()
         randNumber = random.uniform(0,1)
@@ -116,8 +103,25 @@ class MonteCarloAgent(RLAgent):
         self.episode.append((gameState,action))
         return action
 
+    def incrementCounter(self, gameState, action):
+        """
+        increment the corresponding counter by one
+        return: the incremented counter
+        """
+        self.checkAction(gameState,action)
+        state = self.convertState(gameState)
+        key = (state,action)
+        if key in self.N:
+            self.N[key] += 1
+        else: # if it is not stored yet
+            self.N[key] = 1
+        return self.N[key]
+
+    
+
     def updateQ(self, episode):
         """
+        called at the end of an episode
         """
         rewardList = []
         for i in range(len(episode)-1):
@@ -146,7 +150,7 @@ class MonteCarloAgent(RLAgent):
 
     def final(self, gameState):
         """
-        final has been reached, we collect an episode now,
+        final has been reached, we collect an episode now.
         let us update the policy accordingly
         """
         self.episode.append((gameState,))
