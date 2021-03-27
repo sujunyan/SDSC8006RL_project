@@ -31,6 +31,7 @@ class RLAgent(Agent):
         state = (
             gameState.getPacmanState(),
             tuple(gameState.getGhostStates()),
+            tuple(gameState.getCapsules()),
             gameState.getFood())
         #state = gameState
         return state
@@ -96,17 +97,18 @@ class MonteCarloAgent(RLAgent):
         """
         legalMoves = gameState.getLegalActions()
         randNumber = random.uniform(0,1)
-        randInd = random.randint(0,len(legalMoves)-1)
         if randNumber < self.eps:
             # with probability eps, we use uniformly random actions for greedy exploration
+            randInd = random.randint(0,len(legalMoves)-1)
             action = legalMoves[randInd]
         else:
             QList = [self.getQvalue(gameState, act) for act in legalMoves]
             # if the Q value are all zeros, just randomly select one
-            if all(q == 0 for q in QList):
-                ind = randInd
-            else:
-                ind = QList.index(max(QList)) 
+            maxq = max(QList)
+            # there may exist multiple max Q values, we simply randomly select them
+            maxInds = [i for (i,q) in enumerate(QList) if q == maxq]
+            randInd = random.randint(0,len(maxInds)-1)
+            ind = maxInds[randInd]
 
             # find the index of the max Q value in the Q list
             action = legalMoves[ind]
