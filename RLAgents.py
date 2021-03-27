@@ -29,10 +29,10 @@ class RLAgent(Agent):
         """
         # list is not hashable, so we convert them to tuples
         state = (
-            gameState.getPacmanPosition(),
-            tuple(gameState.getGhostPositions()),
-            tuple(gameState.getCapsules()),
+            gameState.getPacmanState(),
+            tuple(gameState.getGhostStates()),
             gameState.getFood())
+        #state = gameState
         return state
 
     def checkAction(self, gameState, action):
@@ -47,12 +47,12 @@ class MonteCarloAgent(RLAgent):
     Try the GLIE version
     """
 
-    def __init__(self, numTraining = 0, initEps=1e-2, gamma = 0.99):
+    def __init__(self, numTraining = 0, eps0=1e-2, gamma = 0.9999):
         super().__init__(numTraining=numTraining) # call initialize function of the parent class
         # The initial  \epsilon greedy exploration, 
         # for training index n, we set eps = initEps/n
-        self.initEps = float(initEps) 
-        self.eps = self.initEps
+        self.eps0 = float(eps0) 
+        self.eps = self.eps0
         self.gamma = float(gamma)
         # the policy pi, which is a dict from state to an action
         self.pi = {}
@@ -96,14 +96,19 @@ class MonteCarloAgent(RLAgent):
         """
         legalMoves = gameState.getLegalActions()
         randNumber = random.uniform(0,1)
+        randInd = random.randint(0,len(legalMoves)-1)
         if randNumber < self.eps:
             # with probability eps, we use uniformly random actions for greedy exploration
-            ind = random.randint(0,len(legalMoves)-1)
-            action = legalMoves[ind]
+            action = legalMoves[randInd]
         else:
             QList = [self.getQvalue(gameState, act) for act in legalMoves]
+            # if the Q value are all zeros, just randomly select one
+            if all(q == 0 for q in QList):
+                ind = randInd
+            else:
+                ind = QList.index(max(QList)) 
+
             # find the index of the max Q value in the Q list
-            ind = QList.index(max(QList)) 
             action = legalMoves[ind]
             #print(legalMoves)
         self.episode.append((gameState,action))
@@ -146,7 +151,7 @@ class MonteCarloAgent(RLAgent):
         self.updateQ(self.episode)
         self.episode = [] # reset the episode to empty
         self.trainIndex += 1
-        self.eps = self.initEps/self.trainIndex
+        self.eps = self.eps0/self.trainIndex
 
     
         

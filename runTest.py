@@ -4,11 +4,18 @@ for our RL project use
 """
 
 from pacman import readCommand, ClassicGameRules
+import RLAgents
+import layout
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
+import textDisplay
+import __main__
 
 def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
-    import __main__
+    """
+    A copy of same function in pacman.py
+    """
     __main__.__dict__['_display'] = display
 
     rules = ClassicGameRules(timeout)
@@ -17,10 +24,10 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
 
     for i in range(numGames):
         print(f"({i}/{numGames}) game start")
-        beQuiet = i < numTraining
+        #beQuiet = i < numTraining
+        beQuiet = True
         if beQuiet:
-                # Suppress output and graphics
-            import textDisplay
+            # Suppress output and graphics
             gameDisplay = textDisplay.NullGraphics()
             rules.quiet = True
         else:
@@ -29,9 +36,10 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, beQuiet, catchExceptions)
         game.run()
-        if not beQuiet:
-            games.append(game)
+        #if not beQuiet:
+        #    games.append(game)
 
+        games.append(game)
         if record:
             import time
             import pickle
@@ -59,39 +67,53 @@ def plotGames(games):
     """
     plot games
     """ 
-
-    import matplotlib.pyplot as plt
     scores = [game.state.getScore() for game in games]
+    wins = [game.state.isWin() for game in games]
+
     avgScoreList = []
     nGames = len(games)
     # only look at the lastest window number of games 
     window = int(0.1*nGames)
-    for i in range(nGames):
+    avgScoreList = [scores[0]]
+    winRateList = []
+    winCnt = 0
+    for i in range(1,nGames):
         #iend = min(i+window,nGames)
-        scoreToLookAt = scores[0:i]
         #scoreToLookAt = scores[i:iend]
-        avgScoreList.append(np.mean(scoreToLookAt))
+        scoreToLookAt = scores[0:i]
+        winCnt += wins[i]
+        #avgScoreList.append(np.mean(scoreToLookAt))
+        avgScoreList.append(avgScoreList[-1]*(i-1)/i + scores[i]/i)
+        winRateList.append(winCnt/(i+1))
+    plt.subplot(121)
     plt.plot(avgScoreList)
     plt.xlabel("number of games")
     plt.ylabel("average score")
+    plt.subplot(122)
+    plt.plot(winRateList)
+    plt.xlabel("number of games")
+    plt.ylabel("winning rate")
     plt.show()
         
-
-if __name__ == '__main__':
+def testMCAgent():
     """
-    The main function called when pacman.py is run
-    from the command line:
-
-    > python pacman.py
-
-    See the usage string for more details.
-
-    > python pacman.py --help
+    set up the parameters to test the MonteCarloAgent 
     """
     args = readCommand(sys.argv[1:])  # Get game components based on input
+    # manually set the parameters here, please comment it out if you want to set them from command line
+    #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
+    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1,gamma=0.9999)
+    # the simplest layout
+    args['layout'] = layout.getLayout('testClassic')
+    # 
+    args['numGames']  = 2000 
+    args['display'] = textDisplay.NullGraphics()
     games = runGames(**args)
     plotGames(games)
 
-    # import cProfile
-    # cProfile.run("runGames( **args )")
-    pass
+
+
+if __name__ == '__main__':
+    """
+    """
+    testMCAgent()
