@@ -48,13 +48,15 @@ class MonteCarloAgent(RLAgent):
     Try the GLIE version
     """
 
-    def __init__(self, numTraining = 0, eps0=1e-2, gamma = 0.9999):
+    def __init__(self, numTraining = 0, eps0=1e-2, gamma= 0.9999, alpha= 1e-2):
         super().__init__(numTraining=numTraining) # call initialize function of the parent class
         # The initial  \epsilon greedy exploration, 
-        # for training index n, we set eps = initEps/n
+        # for training index n, we set eps = eps0/n
         self.eps0 = float(eps0) 
         self.eps = self.eps0
         self.gamma = float(gamma)
+        # the parameter to discount the Q value so that it can "forget" the old values quickly
+        self.alpha = alpha
         # the policy pi, which is a dict from state to an action
         self.pi = {}
         # the action-value function, which is a dict from (state,action) to a score
@@ -145,8 +147,9 @@ class MonteCarloAgent(RLAgent):
             (gameState,action) = episode[t]
             key = (self.convertState(gameState),action)
             N = self.incrementCounter(gameState,action)
-            self.Q[key] = ( (N-1)*self.getQvalue(gameState,action) + GList[t]) / N
-            #self.Q[key] = ( (N-1)*self.Q[key] + GList[t]) / N
+            oldQ = self.getQvalue(gameState,action)
+            self.Q[key] = ( (N-1)*oldQ + GList[t]) / N
+            #self.Q[key] = (1-self.alpha)* oldQ + self.alpha * GList[t]
 
     def final(self, gameState):
         """
