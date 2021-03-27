@@ -29,18 +29,19 @@ class RLAgent(Agent):
         """
         # list is not hashable, so we convert them to tuples
         
+        pacmanState = gameState.getPacmanState()
         ghostStates = gameState.getGhostStates()
         ghostPositions = [tuple(g.getPosition()) for g in ghostStates]
         ghostScaredTimers = [g.scaredTimer for g in ghostStates]
         capsules = gameState.getCapsules()
+        
         state = (
-            tuple(gameState.getPacmanPosition()),
-            tuple(ghostPositions),
-            tuple(ghostScaredTimers),
+            pacmanState,
+            tuple(ghostStates),
             tuple(capsules),
             gameState.getFood()
             )
-        #state = gameState
+        #state = gameState.deepCopy()
         return state
 
     def checkAction(self, gameState, action):
@@ -105,7 +106,6 @@ class MonteCarloAgent(RLAgent):
             maxInds = [i for (i,q) in enumerate(QList) if q == maxq]
             randInd = random.randint(0,len(maxInds)-1)
             ind = maxInds[randInd]
-
             # find the index of the max Q value in the Q list
             action = legalMoves[ind]
             #print(legalMoves)

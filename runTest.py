@@ -74,14 +74,14 @@ def plotGames(games):
     avgScoreList = []
     nGames = len(games)
     # only look at the lastest window number of games 
-    window = int(0.1*nGames)
+    window = min(int(0.1*nGames),100)
     avgScoreList = [scores[0]]
     winRateList = []
     winCnt = 0
     for i in range(1,nGames):
-        #iend = min(i+window,nGames)
-        #scoreToLookAt = scores[i:iend]
-        scoreToLookAt = scores[0:i]
+        iend = min(i+window,nGames)
+        scoreToLookAt = scores[i:iend]
+        #scoreToLookAt = scores[0:i]
         winCnt += wins[i]
         #avgScoreList.append(np.mean(scoreToLookAt))
         avgScoreList.append(avgScoreList[-1]*(i-1)/i + scores[i]/i)
@@ -105,12 +105,14 @@ def testMCAgent():
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
     random.seed('sdsc8006')
     # eps0 = 10 seems a good choice, this means we need more random samples at the beginning
-    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=0.9999)
+    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=1)
     # the simplest layout
-    args['layout'] = layout.getLayout('smallGrid')
-    #args['layout'] = layout.getLayout('testClassic')
+    #args['layout'] = layout.getLayout('smallGrid')
+    #args['layout'] = layout.getLayout('smallClassic')
+    #args['layout'] = layout.getLayout('mediumGrid')
+    args['layout'] = layout.getLayout('testClassic')
     # sufficient to see the point start to win
-    args['numGames']  = 200
+    args['numGames']  = int(1e3)
     args['display'] = textDisplay.NullGraphics()
     games = runGames(**args)
     plotGames(games)
