@@ -112,7 +112,7 @@ def testMCAgent():
     #args['layout'] = layout.getLayout('mediumGrid')
     args['layout'] = layout.getLayout('testClassic')
     # sufficient to see the point start to win
-    args['numGames']  = int(1e3)
+    #args['numGames']  = int(2e4)
     args['display'] = textDisplay.NullGraphics()
     games = runGames(**args)
     plotGames(games)
