@@ -6,19 +6,21 @@ for our RL project use
 import random
 from pacman import readCommand, ClassicGameRules
 import RLAgents
-import layout
+from layout import getLayout
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import textDisplay
+import copy
 import __main__
 
-def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
+def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30, **args):
     """
     A copy of same function in pacman.py
     """
     __main__.__dict__['_display'] = display
 
+    layout = getLayout(layoutName)
     rules = ClassicGameRules(timeout)
     games = []
 
@@ -61,18 +63,35 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
               (wins.count(True), len(wins), winRate))
         #print('Record:       ', ', '.join(
         #    [['Loss', 'Win'][int(w)] for w in wins]))
+        ## save the result
+        name =  getTitleName(pacman, layoutName, numGames)
+        np.save(f"data/{name}.npy",{
+            'wins' : wins,
+            'scores': scores
+        }, allow_pickle=True)
 
     return games
 
-def plotGames(games, args, layoutName):
+def getTitleName(pacman,layoutName,numGames, **args):
+    """
+    get the title name for each argument specification
+    """
+    pacmanName = type(pacman).__name__
+    titleName = f"n={numGames}.{layoutName}.{pacmanName}"
+
+    return titleName
+
+def plotGames(args, show = False):
     """
     plot games
     """ 
-    scores = [game.state.getScore() for game in games]
-    wins = [game.state.isWin() for game in games]
+    titleName = getTitleName(**args)
+    dic = np.load(f"data/{titleName}.npy", allow_pickle=True).item()
+    scores = dic['scores']
+    wins = dic['wins']
 
     avgScoreList = []
-    nGames = len(games)
+    nGames = len(scores)
     # only look at the lastest window number of games 
     window = min(int(0.1*nGames),100)
     avgScoreList = [scores[0]]
@@ -86,7 +105,8 @@ def plotGames(games, args, layoutName):
         #avgScoreList.append(np.mean(scoreToLookAt))
         avgScoreList.append(avgScoreList[-1]*(i-1)/i + scores[i]/i)
         winRateList.append(winCnt/(i+1))
-    plt.figure(figsize=(12,6))
+
+    plt.figure(figsize=(14,6))
     plt.subplot(121)
     plt.plot(avgScoreList)
     plt.xlabel("number of games")
@@ -96,36 +116,45 @@ def plotGames(games, args, layoutName):
     plt.xlabel("number of games")
     plt.ylabel("winning rate")
 
-    pacmanName = type(args['pacman']).__name__
-    titleName = f"n={args['numGames']}.{layoutName}.{pacmanName}"
-    plt.savefig(f"figs/{titleName}.pdf")
-    plt.show()
+    titleName = getTitleName(**args)
+
+    plt.savefig(f"figs/{titleName}.pdf",bbox_inches='tight')
+    if show:
+        plt.show()
         
-def testMCAgent():
+def test(run=True):
     """
-    set up the parameters to test the MonteCarloAgent 
+    The main test function by Junyan Su
     """
-    args = readCommand(sys.argv[1:])  # Get game components based on input
     # manually set the parameters here, please comment it out if you want to set them from command line
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
     random.seed('sdsc8006')
-    # eps0 = 10 seems a good choice, this means we need more random samples at the beginning
-    args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=1)
-    # the simplest layout
-    #args['layout'] = layout.getLayout('smallGrid')
-    #args['layout'] = layout.getLayout('mediumGrid')
-    #layoutName = 'mediumClassic'
-    layoutName = 'mediumGrid'
-    args['layout'] = layout.getLayout(layoutName)
-    # sufficient to see the point start to win
-    args['numGames']  = int(2e3)
-    args['display'] = textDisplay.NullGraphics()
-    games = runGames(**args)
-    plotGames(games,args,layoutName)
+    argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
+    argsOrigin['display'] = textDisplay.NullGraphics()
 
+    layoutNames = ['mediumClassic', 'mediumGrid']
+    layoutNames = [layoutNames[1]]  # only choose one for testing
+    pacmans = [
+        RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
+    ]
+    
+    argsList = []
 
+    for pacman in pacmans:
+        for layoutName in layoutNames:
+            argsTmp = copy.deepcopy(argsOrigin)
+            argsTmp['pacman'] = pacman
+            argsTmp['layoutName'] = layoutName
+            argsList.append(argsTmp)
+
+    if run:
+        for args in argsList:
+            runGames(**args)
+    
+    for args in argsList:
+        plotGames(args, show=True)
 
 if __name__ == '__main__':
     """
     """
-    testMCAgent()
+    test(run=False)
