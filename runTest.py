@@ -64,7 +64,7 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
 
     return games
 
-def plotGames(games):
+def plotGames(games, args, layoutName):
     """
     plot games
     """ 
@@ -86,6 +86,7 @@ def plotGames(games):
         #avgScoreList.append(np.mean(scoreToLookAt))
         avgScoreList.append(avgScoreList[-1]*(i-1)/i + scores[i]/i)
         winRateList.append(winCnt/(i+1))
+    plt.figure(figsize=(12,6))
     plt.subplot(121)
     plt.plot(avgScoreList)
     plt.xlabel("number of games")
@@ -94,6 +95,10 @@ def plotGames(games):
     plt.plot(winRateList)
     plt.xlabel("number of games")
     plt.ylabel("winning rate")
+
+    pacmanName = type(args['pacman']).__name__
+    titleName = f"n={args['numGames']}.{layoutName}.{pacmanName}"
+    plt.savefig(f"figs/{titleName}.pdf")
     plt.show()
         
 def testMCAgent():
@@ -108,14 +113,15 @@ def testMCAgent():
     args['pacman'] = RLAgents.MonteCarloAgent(eps0=1e1,gamma=1)
     # the simplest layout
     #args['layout'] = layout.getLayout('smallGrid')
-    #args['layout'] = layout.getLayout('smallClassic')
     #args['layout'] = layout.getLayout('mediumGrid')
-    args['layout'] = layout.getLayout('testClassic')
+    #layoutName = 'mediumClassic'
+    layoutName = 'mediumGrid'
+    args['layout'] = layout.getLayout(layoutName)
     # sufficient to see the point start to win
-    #args['numGames']  = int(2e4)
+    args['numGames']  = int(2e3)
     args['display'] = textDisplay.NullGraphics()
     games = runGames(**args)
-    plotGames(games)
+    plotGames(games,args,layoutName)
 
 
 
