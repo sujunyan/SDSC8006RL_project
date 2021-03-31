@@ -15,7 +15,7 @@
         //"-l","testClassic",
         "-p","MonteCarloAgent",
         //"--numTraining","200",
-        "--numGames","20",
+        "--numGames","2000",
         //"--agentArgs","eps0=1,gamma=0.9999",
         "--quietTextGraphics",
         "--fixRandomSeed",

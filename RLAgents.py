@@ -2,6 +2,7 @@
 In this file, we implement our agent with Reinforcement Learning technique
 """
 
+from numpy import linalg
 from pacman import GameState
 from game import Agent
 from util import manhattanDistance
@@ -192,29 +193,38 @@ class FunctionApproxAgent(RLAgent):
         """
         In function approximate agents, we reduce the dimension of state
         by considering only the "features" :
-        - relative position to the closest food
-        - relative position to the active ghost
-        - relative position to the active ghost
-        - inverse of the distance to closest active ghost
-        - number of scared ghosts nearby
-        - minimum distance to a capsule
-        - minimum distance to a scared ghost
-        - activation of number of capsules when ghost is nearby
-        - activation of binary feature when ghost is not nearby and there is food nearby
+        - distace to the ghosts
+        - 
         """
-
+        nextGameState = gameState.getNextState(0, action)
         feature = []
-        pacmanState = gameState.getPacmanState()
-        ghostStates = gameState.getGhostStates()
+        pacmanState = nextGameState.getPacmanState()
+        ghostStates = nextGameState.getGhostStates()
 
         pacmanPosition = np.array(pacmanState.getPosition())
-        foods = gameState.getFood()
+        foods = nextGameState.getFood().asList()
+        if foods:
+            foodDis = [np.linalg.norm(np.array(food) - pacmanPosition,1) for food in foods]
+        else:
+            foodDis = [0]
+        feature.append(min(foodDis))
 
+        isActiveGhostNear = False
+        isScaredGhostNear = False
         for g in ghostStates:
-            feature.append(g.scaredTimer)
-            for i in np.array(g.getPosition()) - pacmanPosition:
-                feature.append(i)
-        capsules = gameState.getCapsules()
+            pos = np.array(g.getPosition())
+            dis = np.linalg.norm(pos - pacmanPosition, ord=1)
+            feature.append(dis)
+            if dis <= 2:
+                if g.scaredTimer > 0:
+                    isScaredGhostNear = True
+                elif g.scaredTimer == 0:
+                    isActiveGhostNear = True
+                    
+        feature.append(isActiveGhostNear)
+        feature.append(isScaredGhostNear)
+
+        #capsules = gameState.getCapsules()
         
 
         #feature.append(hash(tuple(capsules)))
@@ -226,7 +236,8 @@ class FunctionApproxAgent(RLAgent):
         if self.w is None:
             self.wLen = len(feature)
             self.w = np.zeros(self.wLen)
-        return self.w.dot(feature)
+        Q = self.w.dot(feature)
+        return Q
     
     def target(self, gameState):
         """

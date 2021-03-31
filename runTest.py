@@ -137,7 +137,7 @@ def test(run=True):
     layoutNames = ['mediumClassic', 'mediumGrid']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
-        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-4),
+        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-2),
     ]
     layoutNames = [layoutNames[1]]  # only choose one for testing
     pacmans = [pacmans[1]]
@@ -156,7 +156,7 @@ def test(run=True):
             runGames(**args)
     
     for args in argsList:
-        plotGames(args, show=False)
+        plotGames(args, show=True)
 
 if __name__ == '__main__':
     """
