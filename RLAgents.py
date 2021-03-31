@@ -255,7 +255,8 @@ class FunctionApproxAgent(RLAgent):
             minFoodDis = 0
         feature.append(nextGameState.isWin())
         feature.append(minFoodDis)
-        feature.append(len(nextFoods)-len(curFoods))
+        # additional reward
+        feature.append(len(curFoods) - len(nextFoods))
 
         isActiveGhostTwoStep = False
         isActiveGhostOneStep = False
