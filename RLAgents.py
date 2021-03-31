@@ -7,6 +7,7 @@ from game import Agent
 from util import manhattanDistance
 from game import Directions
 import random, util
+import numpy as np
 
 class RLAgent(Agent):
     """
@@ -18,9 +19,21 @@ class RLAgent(Agent):
     is another abstract class.
     """
 
-    def __init__(self, numTraining = 0):
+    def __init__(self, numTraining = 0, eps0=1e-2, gamma= 0.9999, alpha= 1e-2):
         self.index = 0 # Pacman is always agent index 0
         self.numTraining = numTraining
+        # The initial  \epsilon greedy exploration, 
+        # for training index n, we set eps = eps0/n
+        self.eps0 = float(eps0) 
+        self.eps = self.eps0
+        self.gamma = float(gamma)
+        # the parameter to discount the Q value so that it can "forget" the old values quickly
+        self.alpha = alpha
+        # the policy pi, which is a dict from state to an action
+        self.pi = {}
+        # the action-value function, which is a dict from (state,action) to a score
+        self.Q = {}
+        self.episode = []
 
     def convertState(self, gameState):
         """
@@ -47,34 +60,8 @@ class RLAgent(Agent):
     def checkAction(self, gameState, action):
         if not (action in gameState.getLegalActions()):
             raise Exception("action not legal")
-            
-
-class MonteCarloAgent(RLAgent):
-    """
-    Use Monte Carlo Control to play the pacman game
-    Refer to the lesson slide 6: Model free control (11-23)
-    Try the GLIE version
-    """
-
-    def __init__(self, numTraining = 0, eps0=1e-2, gamma= 0.9999, alpha= 1e-2):
-        super().__init__(numTraining=numTraining) # call initialize function of the parent class
-        # The initial  \epsilon greedy exploration, 
-        # for training index n, we set eps = eps0/n
-        self.eps0 = float(eps0) 
-        self.eps = self.eps0
-        self.gamma = float(gamma)
-        # the parameter to discount the Q value so that it can "forget" the old values quickly
-        self.alpha = alpha
-        # the policy pi, which is a dict from state to an action
-        self.pi = {}
-        # the action-value function, which is a dict from (state,action) to a score
-        self.Q = {}
-        # the counter for each state action pair
-        self.N = {}
-        # the list that store one instance of episode, updated in the function self.final
-        self.episode = []
-        self.trainIndex = 0 #current traning index
     
+
     def getQvalue(self, gameState, action):
         """
         get Q value 
@@ -108,9 +95,25 @@ class MonteCarloAgent(RLAgent):
             ind = maxInds[randInd]
             # find the index of the max Q value in the Q list
             action = legalMoves[ind]
-            #print(legalMoves)
         self.episode.append((gameState,action))
         return action
+            
+
+class MonteCarloAgent(RLAgent):
+    """
+    Use Monte Carlo Control to play the pacman game
+    Refer to the lesson slide 6: Model free control (11-23)
+    Try the GLIE version
+    """
+
+    def __init__(self, numTraining = 0, eps0=1e-2, gamma= 0.9999, alpha= 1e-2):
+        # call initialize function of the parent class
+        super(). __init__(numTraining = numTraining, eps0=eps0, gamma= gamma, alpha= alpha)
+        
+        # the counter for each state action pair
+        self.N = {}
+        # the list that store one instance of episode, updated in the function self.final
+        self.trainIndex = 0 #current traning index
 
     def incrementCounter(self, gameState, action):
         """
@@ -168,5 +171,113 @@ class MonteCarloAgent(RLAgent):
         self.eps = self.eps0/self.trainIndex
 
     
+## Start to implement function approximated based methods, 
+##
+
+class FunctionApproxAgent(RLAgent):
+    """
+    This class provides some common elements to all of our Function Approximate based agents.
+
+    Note: this is an abstract class: one that should not be instantiated.  It's only partially specified, and designed to be extended.
+
+    See lec 7. Value Function Approximation
+    The only difference for its child classes is how to update the weight delta w
+    """
+    def __init__(self, numTraining, eps0, gamma, alpha):
+        super().__init__(numTraining=numTraining, eps0=eps0, gamma=gamma, alpha=alpha)
+        self.w = None
+        self.lastAction = None
         
+    def featureMap(self, gameState, action):
+        """
+        In function approximate agents, we reduce the dimension of state
+        by considering only the "features" :
+        1. the pacman position
+        2. the positions of the ghosts
+        3. the hash value of positions of capsules
+        4. the scareTimer
+        5. hash value of the foods
+        """
+
+        feature = []
+        pacmanState = gameState.getPacmanState()
+        ghostStates = gameState.getGhostStates()
+
+        pacmanPosition = pacmanState.getPosition()
+        ghostPositions = [ g.getPosition() for g in ghostStates]
+        ghostScaredTimers = [g.scaredTimer for g in ghostStates]
+        capsules = gameState.getCapsules()
+
+        for iList in [pacmanPosition, ghostScaredTimers]:
+            for i in iList:
+                feature.append(i)
+        
+        for pos in ghostPositions:
+            for i in pos:
+                feature.append(i)
+
+        feature.append(hash(gameState.getFood()))
+        feature.append(hash(tuple(capsules)))
+        return np.array(feature)
+    
+    def getQvalue(self, gameState, action):
+        feature = self.featureMap(gameState, action)
+        # initialize the weight vector
+        if self.w is None:
+            self.wLen = len(feature)
+            self.w = np.zeros(self.wLen)
+        return self.w.dot(feature)
+    
+    def target(self, gameState):
+        """
+        the target used in the method updateQBeforeAction,
+        refer to  page 28/30 in the lec 7 slide
+        """
+        util.raiseNotDefined()
+        
+    def updateWBeforeAction(self,gameState):
+        """
+        update the Q before the action
+        should be called in Q-learning process
+        """
+        # ignore the first state
+        if self.lastAction:
+            feature = self.featureMap(self.lastState, self.lastAction)
+            R = gameState.getScore() - self.lastState.getScore()
+            lastQ = self.getQvalue(self.lastState, self.lastAction)
+            target = self.target(gameState)
+            deltaW = R + self.gamma * target - lastQ
+            deltaW = deltaW * self.alpha * feature
+            self.w += deltaW
+
+            
+    def getAction(self, gameState):
+        """
+        """
+        self.updateWBeforeAction(gameState)
+        action =  super().getAction(gameState)
+        self.lastAction = action
+        self.lastState = gameState
+        return action
+
+    def final(self, gameState):
+        """
+        final has been reached, we collect an episode now.
+        let us update the policy accordingly
+        """
+        self.updateWBeforeAction(gameState)
+
+class QLearningAgent(FunctionApproxAgent):
+    def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
+        super().__init__(numTraining, eps0, gamma, alpha)
+    
+    def target(self, gameState):
+        legalMoves = gameState.getLegalActions()
+        if legalMoves:
+            QList = [self.getQvalue(gameState,a) for a in legalMoves]
+            return max(QList)
+        else:
+            # if we are at the final state
+            return 0
+
 
