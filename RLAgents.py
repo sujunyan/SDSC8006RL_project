@@ -205,11 +205,8 @@ class FunctionApproxAgent(RLAgent):
         find the shortest path from current position to destination defined by the function isEnd
         """
         pos = tuple(gameState.getPacmanPosition())
-        foods = gameState.getFood()
 
         # if there is not food left
-        if not foods.asList():
-            return -1
 
         visited = []
         q = Queue()
@@ -249,28 +246,41 @@ class FunctionApproxAgent(RLAgent):
         #    foodDis = [np.linalg.norm(np.array(food) - pacmanPosition,1) for food in foods]
         #else:
         #    foodDis = [0]
+        nextFoods = nextGameState.getFood().asList()
+        curFoods = gameState.getFood().asList()
+        if curFoods:
+            isEnd = lambda x,y : gameState.hasFood(x,y)
+            minFoodDis = self.shortestPath(nextGameState, isEnd)
+        else:
+            minFoodDis = 0
         feature.append(nextGameState.isWin())
-        isEnd = lambda x,y : gameState.hasFood(x,y)
-        minFoodDis = self.shortestPath(nextGameState, isEnd)
         feature.append(minFoodDis)
+        feature.append(len(nextFoods)-len(curFoods))
 
         isActiveGhostTwoStep = False
         isActiveGhostOneStep = False
         isScaredGhostNear = False
+        isSafe = True
         for g in ghostStates:
             pos = np.array(g.getPosition())
-            dis = np.linalg.norm(pos - pacmanPosition, ord=1)
+            isEnd = lambda x,y : (x == pos[0]) and (y == pos[1])
+            #dis = np.linalg.norm(pos - pacmanPosition, ord=1)
+            dis = self.shortestPath(nextGameState, isEnd)
+            dis2 = self.shortestPath(gameState, isEnd)
             feature.append(dis)
-            if dis <= 2:
+            feature.append(dis2)
+            if dis2 <= 2:
                 if g.scaredTimer > 0:
                     isScaredGhostNear = True
                 elif g.scaredTimer == 0:
                     isActiveGhostTwoStep = True
-            if dis <=1 and g.scaredTimer == 0:
+                isSafe = False
+            if dis2 <=1 and g.scaredTimer == 0:
                 isActiveGhostOneStep = True
                     
         feature.append(isActiveGhostOneStep)
         feature.append(isActiveGhostTwoStep)
+        feature.append(isSafe)
         feature.append(isScaredGhostNear)
 
         #capsules = gameState.getCapsules()
