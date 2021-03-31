@@ -34,6 +34,7 @@ class RLAgent(Agent):
         # the action-value function, which is a dict from (state,action) to a score
         self.Q = {}
         self.episode = []
+        self.trainIndex = 0 #current traning index
 
     def convertState(self, gameState):
         """
@@ -113,7 +114,6 @@ class MonteCarloAgent(RLAgent):
         # the counter for each state action pair
         self.N = {}
         # the list that store one instance of episode, updated in the function self.final
-        self.trainIndex = 0 #current traning index
 
     def incrementCounter(self, gameState, action):
         """
@@ -192,32 +192,32 @@ class FunctionApproxAgent(RLAgent):
         """
         In function approximate agents, we reduce the dimension of state
         by considering only the "features" :
-        1. the pacman position
-        2. the positions of the ghosts
-        3. the hash value of positions of capsules
-        4. the scareTimer
-        5. hash value of the foods
+        - relative position to the closest food
+        - relative position to the active ghost
+        - relative position to the active ghost
+        - inverse of the distance to closest active ghost
+        - number of scared ghosts nearby
+        - minimum distance to a capsule
+        - minimum distance to a scared ghost
+        - activation of number of capsules when ghost is nearby
+        - activation of binary feature when ghost is not nearby and there is food nearby
         """
 
         feature = []
         pacmanState = gameState.getPacmanState()
         ghostStates = gameState.getGhostStates()
 
-        pacmanPosition = pacmanState.getPosition()
-        ghostPositions = [ g.getPosition() for g in ghostStates]
-        ghostScaredTimers = [g.scaredTimer for g in ghostStates]
+        pacmanPosition = np.array(pacmanState.getPosition())
+        foods = gameState.getFood()
+
+        for g in ghostStates:
+            feature.append(g.scaredTimer)
+            for i in np.array(g.getPosition()) - pacmanPosition:
+                feature.append(i)
         capsules = gameState.getCapsules()
-
-        for iList in [pacmanPosition, ghostScaredTimers]:
-            for i in iList:
-                feature.append(i)
         
-        for pos in ghostPositions:
-            for i in pos:
-                feature.append(i)
 
-        feature.append(hash(gameState.getFood()))
-        feature.append(hash(tuple(capsules)))
+        #feature.append(hash(tuple(capsules)))
         return np.array(feature)
     
     def getQvalue(self, gameState, action):
@@ -266,6 +266,9 @@ class FunctionApproxAgent(RLAgent):
         let us update the policy accordingly
         """
         self.updateWBeforeAction(gameState)
+        self.episode = [] # reset the episode to empty
+        self.trainIndex += 1
+        self.eps = self.eps0/self.trainIndex
 
 class QLearningAgent(FunctionApproxAgent):
     def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):

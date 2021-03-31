@@ -12,11 +12,11 @@
       "program": "runTest.py",
       "args": [
         //"-l","smallClassic",
-        "-l","testClassic",
+        //"-l","testClassic",
         "-p","MonteCarloAgent",
         //"--numTraining","200",
         "--numGames","20",
-        "--agentArgs","eps0=1,gamma=0.9999",
+        //"--agentArgs","eps0=1,gamma=0.9999",
         "--quietTextGraphics",
         "--fixRandomSeed",
       ],

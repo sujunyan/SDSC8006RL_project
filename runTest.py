@@ -137,10 +137,10 @@ def test(run=True):
     layoutNames = ['mediumClassic', 'mediumGrid']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
-        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-2),
+        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-4),
     ]
     layoutNames = [layoutNames[1]]  # only choose one for testing
-    pacmans = [pacmans[0]]
+    pacmans = [pacmans[1]]
     
     argsList = []
 
@@ -161,6 +161,7 @@ def test(run=True):
 if __name__ == '__main__':
     """
     """
+    np.seterr(all='raise')
     start = time.time()
     test(run=True)
     print(f"time used {time.time() - start:.2f} s")
