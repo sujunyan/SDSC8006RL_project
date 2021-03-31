@@ -30,7 +30,7 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
     for i in range(numGames):
         print(f"({i}/{numGames}) game start")
         #beQuiet = i < numTraining
-        beQuiet = True
+        beQuiet = (i < numGames -1)
         if beQuiet:
             # Suppress output and graphics
             gameDisplay = textDisplay.NullGraphics()
@@ -132,12 +132,12 @@ def test(run=True):
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
     random.seed('sdsc8006')
     argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
-    argsOrigin['display'] = textDisplay.NullGraphics()
+    #argsOrigin['display'] = textDisplay.NullGraphics()
 
     layoutNames = ['mediumClassic', 'mediumGrid']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
-        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-2),
+        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-4),
     ]
     layoutNames = [layoutNames[1]]  # only choose one for testing
     pacmans = [pacmans[1]]

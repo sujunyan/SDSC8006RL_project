@@ -5,10 +5,11 @@ In this file, we implement our agent with Reinforcement Learning technique
 from numpy import linalg
 from pacman import GameState
 from game import Agent
-from util import manhattanDistance
+from util import Queue, manhattanDistance
 from game import Directions
 import random, util
 import numpy as np
+from queue import Queue
 
 class RLAgent(Agent):
     """
@@ -81,7 +82,10 @@ class RLAgent(Agent):
         """
         get the action 
         """
-        legalMoves = gameState.getLegalActions()
+        # pacman should never stop, since by intuition, we can hardly
+        # benefit from a stop action
+        legalMoves = self.getLegalActions(gameState)
+
         randNumber = random.uniform(0,1)
         if randNumber < self.eps:
             # with probability eps, we use uniformly random actions for greedy exploration
@@ -99,7 +103,14 @@ class RLAgent(Agent):
             action = legalMoves[ind]
         self.episode.append((gameState,action))
         return action
-            
+    
+    def getLegalActions(self, gameState):
+        """
+        self-defined legal actions
+        currently remove STOP
+        """
+        legalMoves = [a for a in gameState.getLegalActions() if a!=Directions.STOP] 
+        return legalMoves
 
 class MonteCarloAgent(RLAgent):
     """
@@ -188,11 +199,42 @@ class FunctionApproxAgent(RLAgent):
         super().__init__(numTraining=numTraining, eps0=eps0, gamma=gamma, alpha=alpha)
         self.w = None
         self.lastAction = None
+
+    def shortestPath(self, gameState, isEnd):
+        """
+        find the shortest path from current position to destination defined by the function isEnd
+        """
+        pos = tuple(gameState.getPacmanPosition())
+        foods = gameState.getFood()
+
+        # if there is not food left
+        if not foods.asList():
+            return -1
+
+        visited = []
+        q = Queue()
+        q.put((pos,0))
+        while not q.empty():
+            (pos,dis) =q.get()
+            visited.append(pos)
+            for (dx,dy) in [(0,1),(0,-1),(1,0),(-1,0)]:
+                x = pos[0] + dx
+                y = pos[1] + dy
+                if (isEnd(x,y)):
+                    return dis+1
+
+                if (not gameState.hasWall(x,y)) and (not (x,y) in visited):
+                    q.put(((x,y),dis+1))
+
+        raise Exception("should not reach here")
+
         
     def featureMap(self, gameState, action):
         """
         In function approximate agents, we reduce the dimension of state
         by considering only the "features" :
+        Note: the distance of two points in a grid should consider walls. So we should find the "shortest path" between two points in a grid
+        - distance to closest food
         - distace to the ghosts
         - 
         """
@@ -202,14 +244,18 @@ class FunctionApproxAgent(RLAgent):
         ghostStates = nextGameState.getGhostStates()
 
         pacmanPosition = np.array(pacmanState.getPosition())
-        foods = nextGameState.getFood().asList()
-        if foods:
-            foodDis = [np.linalg.norm(np.array(food) - pacmanPosition,1) for food in foods]
-        else:
-            foodDis = [0]
-        feature.append(min(foodDis))
+        #foods = nextGameState.getFood().asList()
+        #if foods:
+        #    foodDis = [np.linalg.norm(np.array(food) - pacmanPosition,1) for food in foods]
+        #else:
+        #    foodDis = [0]
+        feature.append(nextGameState.isWin())
+        isEnd = lambda x,y : gameState.hasFood(x,y)
+        minFoodDis = self.shortestPath(nextGameState, isEnd)
+        feature.append(minFoodDis)
 
-        isActiveGhostNear = False
+        isActiveGhostTwoStep = False
+        isActiveGhostOneStep = False
         isScaredGhostNear = False
         for g in ghostStates:
             pos = np.array(g.getPosition())
@@ -219,14 +265,15 @@ class FunctionApproxAgent(RLAgent):
                 if g.scaredTimer > 0:
                     isScaredGhostNear = True
                 elif g.scaredTimer == 0:
-                    isActiveGhostNear = True
+                    isActiveGhostTwoStep = True
+            if dis <=1 and g.scaredTimer == 0:
+                isActiveGhostOneStep = True
                     
-        feature.append(isActiveGhostNear)
+        feature.append(isActiveGhostOneStep)
+        feature.append(isActiveGhostTwoStep)
         feature.append(isScaredGhostNear)
 
         #capsules = gameState.getCapsules()
-        
-
         #feature.append(hash(tuple(capsules)))
         return np.array(feature)
     
@@ -267,8 +314,8 @@ class FunctionApproxAgent(RLAgent):
         """
         self.updateWBeforeAction(gameState)
         action =  super().getAction(gameState)
+        self.lastState = gameState.deepCopy()
         self.lastAction = action
-        self.lastState = gameState
         return action
 
     def final(self, gameState):
@@ -280,15 +327,18 @@ class FunctionApproxAgent(RLAgent):
         self.episode = [] # reset the episode to empty
         self.trainIndex += 1
         self.eps = self.eps0/self.trainIndex
+        self.lastAction = None
+        self.lastState = None
+        print(self.w)
 
 class QLearningAgent(FunctionApproxAgent):
     def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
         super().__init__(numTraining, eps0, gamma, alpha)
     
     def target(self, gameState):
-        legalMoves = gameState.getLegalActions()
+        legalMoves = self.getLegalActions(gameState)
         if legalMoves:
-            QList = [self.getQvalue(gameState,a) for a in legalMoves]
+            QList = [self.getQvalue(gameState,a) for a in legalMoves ]
             return max(QList)
         else:
             # if we are at the final state

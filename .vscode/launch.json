@@ -15,9 +15,9 @@
         //"-l","testClassic",
         "-p","MonteCarloAgent",
         //"--numTraining","200",
-        "--numGames","2000",
+        "--numGames","500",
         //"--agentArgs","eps0=1,gamma=0.9999",
-        "--quietTextGraphics",
+        //"--quietTextGraphics",
         "--fixRandomSeed",
       ],
       "console": "integratedTerminal"
