@@ -231,10 +231,14 @@ class FunctionApproxAgent(RLAgent):
         """
         In function approximate agents, we reduce the dimension of state
         by considering only the "features" :
-        Note: the distance of two points in a grid should consider walls. So we should find the "shortest path" between two points in a grid
+        Note: the distance of two points in a grid should consider walls. 
+        So we should find the "shortest path" between two points in a grid
+        The features considered here 
+        - if we win the game in next state
         - distance to closest food
-        - distace to the ghosts
-        - 
+        - if there is a food eaten in next state
+        - if there are active ghost in n steps away from us
+        - if there is a scared ghost near by
         """
         nextGameState = gameState.getNextState(0, action)
         feature = []
