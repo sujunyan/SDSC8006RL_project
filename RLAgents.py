@@ -2,7 +2,6 @@
 In this file, we implement our agent with Reinforcement Learning technique
 """
 
-from numpy import linalg
 from pacman import GameState
 from game import Agent
 from util import Queue, manhattanDistance
@@ -266,15 +265,18 @@ class FunctionApproxAgent(RLAgent):
 
         nStepConsider = 5 # only consider this number of steps away from the pacman
         isScaredGhostNear = False
-        minGhostDis = np.inf
+        foodsTmp = gameState.getFood()
+        minGhostDis = foodsTmp.width + foodsTmp.height
         for g in ghostStates:
             pos = np.array(g.getPosition())
             isEnd = lambda x,y : (x == int(pos[0])) and (y == int(pos[1]))
             #dis = np.linalg.norm(pos - pacmanPosition, ord=1)
             dis = self.shortestPath(nextGameState, isEnd)
             #dis2 = self.shortestPath(gameState, isEnd)
-            minGhostDis = min(dis,minGhostDis)
-            if g.scaredTimer > 0 and dis <= 1:
+            if g.scaredTimer <= 1:
+                minGhostDis = min(dis,minGhostDis)
+
+            if g.scaredTimer > 1 and dis <= 1:
                 isScaredGhostNear = True
 
         for step in range(nStepConsider):
@@ -286,7 +288,8 @@ class FunctionApproxAgent(RLAgent):
 
         #feature.append(minGhostDis)
         feature.append(isScaredGhostNear)
-        #capsules = gameState.getCapsules()
+        capsules = gameState.getCapsules()
+        
         #feature.append(hash(tuple(capsules)))
         return np.array(feature)
     
@@ -342,7 +345,7 @@ class FunctionApproxAgent(RLAgent):
         self.eps = self.eps0/self.trainIndex
         self.lastAction = None
         self.lastState = None
-        print(self.w)
+        #print(self.w)
 
 class QLearningAgent(FunctionApproxAgent):
     def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
@@ -357,4 +360,14 @@ class QLearningAgent(FunctionApproxAgent):
             # if we are at the final state
             return 0
 
+
+class PolicyGradientAgent(FunctionApproxAgent):
+    """
+    the agent that uses the policy gradient method
+    refer to lec8, we use softmax policy here 
+    """
+    def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
+        super().__init__(numTraining, eps0, gamma, alpha)
+        # the weight parameter
+        self.theta = None
 
