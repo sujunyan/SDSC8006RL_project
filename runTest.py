@@ -7,7 +7,7 @@ import random
 from pacman import readCommand, ClassicGameRules
 import RLAgents
 from layout import getLayout
-from td1 import TDAgent
+from tdAgents import TDAgent
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -149,7 +149,7 @@ def test(run=True):
     ]
 
     layoutNames = [layoutNames[1]]  # only choose one for testing
-    pacmans = [pacmans[3]]
+    pacmans = [pacmans[2]]
     
     argsList = []
 
