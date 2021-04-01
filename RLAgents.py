@@ -443,8 +443,8 @@ class ActorCriticAgent(FunctionApproxAgent):
     
     def final(self, gameState):
         super().final(gameState)
-        print(self.w)
-        print(self.theta)
+        #print(self.w)
+        #print(self.theta)
         
 
         
