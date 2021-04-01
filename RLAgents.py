@@ -2,6 +2,7 @@
 In this file, we implement our agent with Reinforcement Learning technique
 """
 
+from math import exp
 from pacman import GameState
 from game import Agent
 from util import Queue, manhattanDistance
@@ -302,14 +303,14 @@ class FunctionApproxAgent(RLAgent):
         Q = self.w.dot(feature)
         return Q
     
-    def target(self, gameState):
+    def target(self, gameState, action):
         """
         the target used in the method updateQBeforeAction,
         refer to  page 28/30 in the lec 7 slide
         """
         util.raiseNotDefined()
         
-    def updateWBeforeAction(self,gameState):
+    def updateW(self, gameState, action):
         """
         update the Q before the action
         should be called in Q-learning process
@@ -319,7 +320,7 @@ class FunctionApproxAgent(RLAgent):
             feature = self.featureMap(self.lastState, self.lastAction)
             R = gameState.getScore() - self.lastState.getScore() 
             lastQ = self.getQvalue(self.lastState, self.lastAction)
-            target = self.target(gameState)
+            target = self.target(gameState, action)
             deltaW = R + self.gamma * target - lastQ
             deltaW = deltaW * self.alpha * feature
             self.w += deltaW
@@ -328,8 +329,8 @@ class FunctionApproxAgent(RLAgent):
     def getAction(self, gameState):
         """
         """
-        self.updateWBeforeAction(gameState)
         action =  super().getAction(gameState)
+        self.updateW(gameState, action)
         self.lastState = gameState.deepCopy()
         self.lastAction = action
         return action
@@ -339,7 +340,8 @@ class FunctionApproxAgent(RLAgent):
         final has been reached, we collect an episode now.
         let us update the policy accordingly
         """
-        self.updateWBeforeAction(gameState)
+        # there is no action next
+        self.updateW(gameState, None)
         self.episode = [] # reset the episode to empty
         self.trainIndex += 1
         self.eps = self.eps0/self.trainIndex
@@ -348,10 +350,10 @@ class FunctionApproxAgent(RLAgent):
         #print(self.w)
 
 class QLearningAgent(FunctionApproxAgent):
-    def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
+    def __init__(self, numTraining = 0, eps0 = 1, gamma = 1, alpha = 1e-4):
         super().__init__(numTraining, eps0, gamma, alpha)
     
-    def target(self, gameState):
+    def target(self, gameState, action):
         legalMoves = self.getLegalActions(gameState)
         if legalMoves:
             QList = [self.getQvalue(gameState,a) for a in legalMoves ]
@@ -361,13 +363,86 @@ class QLearningAgent(FunctionApproxAgent):
             return 0
 
 
-class PolicyGradientAgent(FunctionApproxAgent):
+class ActorCriticAgent(FunctionApproxAgent):
     """
-    the agent that uses the policy gradient method
-    refer to lec8, we use softmax policy here 
+    the agent that uses the Actor Critic policy gradient method
+    refer to pp. 27/33 lec8, we use softmax policy here 
     """
-    def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-4):
+    def __init__(self, numTraining = 0, eps0 = 1, gamma = 0.9999, alpha = 1e-8, beta = 1e-8):
         super().__init__(numTraining, eps0, gamma, alpha)
         # the weight parameter
         self.theta = None
+        # slightly different from the slides, the beta is used in theta update
+        self.beta = beta
+    
+    def softMax(self, gameState):
+        """
+        The softmax policy defined in pp 19/33 in lec 8
+        return: (action, expectedFeature)
+        """
+        legalMoves = self.getLegalActions(gameState)
+        features = [self.featureMap(gameState, act) for act in legalMoves]
+        if self.theta is None:
+            self.thetaLen = len(features[0])
+            self.theta = np.zeros(self.thetaLen)
+        
+        # the probability distribution for each action
+        piTheta = np.array([exp(self.theta.dot(feature)) for feature in features])
+        probDis = piTheta / sum(piTheta)
+        
+        randNum = random.uniform(0,1)
+        # the accumulated probability 
+        accumulateProb = 0
+        actIdx = None
+        for i, prob in enumerate(probDis):
+            accumulateProb += prob
+            if randNum <= accumulateProb:
+                actIdx = i
+                break
+        assert (actIdx is not None)
+        expectedFeature = np.zeros(self.thetaLen)
+                                   
+        for i,f in enumerate(features):
+            expectedFeature += probDis[i] * f
+        
+        return (legalMoves[actIdx], expectedFeature)
+    
+    def target(self, gameState, action):
+        if action:
+            return self.getQvalue(gameState, action)
+        else:
+            return 0
+
+    
+    def getAction(self, gameState):
+        """
+        Get the action with softmax policy.
+        Update the parameters w and  accordingly
+        """
+        (action, expectedFeature) = self.softMax(gameState)
+
+        # skip it if it is the initial state
+        if self.lastAction:
+            # update theta
+            lastQ =  self.getQvalue(self.lastState, self.lastAction)
+            feature = self.featureMap(self.lastState, self.lastAction)
+
+            self.theta += self.beta * (feature - expectedFeature) * lastQ
+
+            # update w in Q value estimate
+            self.updateW(gameState, action)
+        
+        self.lastAction = action
+        self.lastState = gameState
+
+        return action
+    
+    def final(self, gameState):
+        super().final(gameState)
+        print(self.w)
+        print(self.theta)
+        
+
+        
+            
 

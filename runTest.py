@@ -134,17 +134,18 @@ def test(run=True):
     """
     # manually set the parameters here, please comment it out if you want to set them from command line
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
-    random.seed('sdsc8006')
     argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
+    random.seed('sdsc8006')
     #argsOrigin['display'] = textDisplay.NullGraphics()
 
     layoutNames = ['mediumClassic', 'mediumGrid']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
         RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
+        RLAgents.ActorCriticAgent(gamma=1, alpha=1e-3, beta=1e-5),
     ]
-    layoutNames = [layoutNames[0]]  # only choose one for testing
-    pacmans = [pacmans[1]]
+    layoutNames = [layoutNames[1]]  # only choose one for testing
+    pacmans = [pacmans[2]]
     
     argsList = []
 
