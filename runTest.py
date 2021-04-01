@@ -27,8 +27,10 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
     games = []
 
 
+    avgScore = 0
+    winCnt = 0
     for i in range(numGames):
-        print(f"({i}/{numGames}) game start")
+        print(f"({i}/{numGames}) game start, avgScore {avgScore:.2f} winCnt {winCnt}")
         #beQuiet = i < numTraining
         beQuiet = (i < numGames -1)
         if beQuiet:
@@ -44,6 +46,8 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
         #if not beQuiet:
         #    games.append(game)
 
+        avgScore = (avgScore * i +  game.state.getScore())/(i+1)
+        winCnt += game.state.isWin()
         games.append(game)
         if record:
             import time
@@ -137,9 +141,9 @@ def test(run=True):
     layoutNames = ['mediumClassic', 'mediumGrid']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
-        RLAgents.QLearningAgent(eps0=1e1, gamma=1, alpha=1e-4),
+        RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
     ]
-    layoutNames = [layoutNames[1]]  # only choose one for testing
+    layoutNames = [layoutNames[0]]  # only choose one for testing
     pacmans = [pacmans[1]]
     
     argsList = []

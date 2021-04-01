@@ -211,6 +211,7 @@ class FunctionApproxAgent(RLAgent):
         visited = []
         q = Queue()
         q.put((pos,0))
+        visited.append(pos)
         while not q.empty():
             (pos,dis) =q.get()
             visited.append(pos)
@@ -218,11 +219,11 @@ class FunctionApproxAgent(RLAgent):
                 x = pos[0] + dx
                 y = pos[1] + dy
                 if (isEnd(x,y)):
-                    return dis+1
+                    return dis + 1
 
                 if (not gameState.hasWall(x,y)) and (not (x,y) in visited):
                     q.put(((x,y),dis+1))
-
+        
         raise Exception("should not reach here")
 
         
@@ -253,37 +254,38 @@ class FunctionApproxAgent(RLAgent):
             minFoodDis = self.shortestPath(nextGameState, isEnd)
         else:
             minFoodDis = 0
+
+        # additional reward
+        foodEten = len(curFoods) - len(nextFoods)
+        if foodEten:
+            minFoodDis = -1
+
         feature.append(nextGameState.isWin())
         feature.append(minFoodDis)
-        # additional reward
-        feature.append(len(curFoods) - len(nextFoods))
+        feature.append(foodEten)
 
-        isActiveGhostTwoStep = False
-        isActiveGhostOneStep = False
+        nStepConsider = 5 # only consider this number of steps away from the pacman
         isScaredGhostNear = False
-        isSafe = True
+        minGhostDis = np.inf
         for g in ghostStates:
             pos = np.array(g.getPosition())
-            isEnd = lambda x,y : (x == pos[0]) and (y == pos[1])
+            isEnd = lambda x,y : (x == int(pos[0])) and (y == int(pos[1]))
             #dis = np.linalg.norm(pos - pacmanPosition, ord=1)
             dis = self.shortestPath(nextGameState, isEnd)
-            dis2 = self.shortestPath(gameState, isEnd)
-            feature.append(dis)
-            feature.append(dis2)
-            if dis2 <= 2:
-                if g.scaredTimer > 0:
-                    isScaredGhostNear = True
-                elif g.scaredTimer == 0:
-                    isActiveGhostTwoStep = True
-                isSafe = False
-            if dis2 <=1 and g.scaredTimer == 0:
-                isActiveGhostOneStep = True
-                    
-        feature.append(isActiveGhostOneStep)
-        feature.append(isActiveGhostTwoStep)
-        feature.append(isSafe)
-        feature.append(isScaredGhostNear)
+            #dis2 = self.shortestPath(gameState, isEnd)
+            minGhostDis = min(dis,minGhostDis)
+            if g.scaredTimer > 0 and dis <= 1:
+                isScaredGhostNear = True
 
+        for step in range(nStepConsider):
+            # if there is a ghost step + 1 near by
+            if minGhostDis <= step + 1:
+                feature.append(1)
+            else:
+                feature.append(-1)
+
+        #feature.append(minGhostDis)
+        feature.append(isScaredGhostNear)
         #capsules = gameState.getCapsules()
         #feature.append(hash(tuple(capsules)))
         return np.array(feature)
@@ -312,7 +314,7 @@ class FunctionApproxAgent(RLAgent):
         # ignore the first state
         if self.lastAction:
             feature = self.featureMap(self.lastState, self.lastAction)
-            R = gameState.getScore() - self.lastState.getScore()
+            R = gameState.getScore() - self.lastState.getScore() 
             lastQ = self.getQvalue(self.lastState, self.lastAction)
             target = self.target(gameState)
             deltaW = R + self.gamma * target - lastQ

@@ -18,7 +18,7 @@
         "--numGames","500",
         //"--agentArgs","eps0=1,gamma=0.9999",
         //"--quietTextGraphics",
-        "--fixRandomSeed",
+        //"--fixRandomSeed",
       ],
       "console": "integratedTerminal"
     }
