@@ -142,9 +142,10 @@ def test(run=True):
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
         RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
-        RLAgents.ActorCriticAgent(gamma=1, alpha=1e-3, beta=1e-5),
+        # alpha for w update, beta for theta update
+        RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
     ]
-    layoutNames = [layoutNames[1]]  # only choose one for testing
+    layoutNames = [layoutNames[0]]  # only choose one for testing
     pacmans = [pacmans[2]]
     
     argsList = []

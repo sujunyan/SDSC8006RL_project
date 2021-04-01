@@ -387,7 +387,11 @@ class ActorCriticAgent(FunctionApproxAgent):
             self.theta = np.zeros(self.thetaLen)
         
         # the probability distribution for each action
-        piTheta = np.array([exp(self.theta.dot(feature)) for feature in features])
+        logPiTheta = [self.theta.dot(feature) for feature in features]
+        minLog = min(logPiTheta)
+        # shift the values to make it numerically stable
+        logPiTheta = [ (i-minLog) for i in logPiTheta]
+        piTheta = np.array([exp(i) for i in logPiTheta])
         probDis = piTheta / sum(piTheta)
         
         randNum = random.uniform(0,1)
