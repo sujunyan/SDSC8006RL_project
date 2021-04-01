@@ -7,6 +7,7 @@ import random
 from pacman import readCommand, ClassicGameRules
 import RLAgents
 from layout import getLayout
+from td1 import TDAgent
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -144,9 +145,11 @@ def test(run=True):
         RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
         # alpha for w update, beta for theta update
         RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
+        TDAgent(eps0=10,gamma=1)
     ]
-    layoutNames = [layoutNames[0]]  # only choose one for testing
-    pacmans = [pacmans[2]]
+
+    layoutNames = [layoutNames[1]]  # only choose one for testing
+    pacmans = [pacmans[3]]
     
     argsList = []
 
