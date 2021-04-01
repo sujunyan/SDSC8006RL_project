@@ -131,7 +131,6 @@ def plotGames(args, show = False):
         
 def test(run=True):
     """
-    The main test function by Junyan Su
     """
     # manually set the parameters here, please comment it out if you want to set them from command line
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
@@ -149,7 +148,7 @@ def test(run=True):
     ]
 
     layoutNames = [layoutNames[1]]  # only choose one for testing
-    pacmans = [pacmans[2]]
+    pacmans = [pacmans[3]]
     
     argsList = []
 
@@ -160,6 +159,7 @@ def test(run=True):
             argsTmp['layoutName'] = layoutName
             argsList.append(argsTmp)
 
+    # if run == False, this means that we will use the saved data
     if run:
         for args in argsList:
             runGames(**args)
