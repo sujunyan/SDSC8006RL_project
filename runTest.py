@@ -136,6 +136,7 @@ def test(run=True):
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
     argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
     random.seed('sdsc8006')
+    argsOrigin['numGames'] = 100  
     #argsOrigin['display'] = textDisplay.NullGraphics()
 
     layoutNames = ['mediumClassic', 'mediumGrid']
