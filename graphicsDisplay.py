@@ -754,8 +754,8 @@ class PacmanGraphicsGif(PacmanGraphics):
         psFileName = f"gif/frameTmp.ps"
         writePostscript(psFileName)
         img = PIL.Image.open(psFileName)
-        img.load()
         try:
+            img.load()
             self.frames.append(img)
             #print(f"store frame used {time.time()-t} s")
         except:
