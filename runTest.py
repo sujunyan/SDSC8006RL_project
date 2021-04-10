@@ -149,8 +149,8 @@ def test(run=True):
         TDAgent(eps0=10,gamma=1)
     ]
 
-    layoutNames = [layoutNames[0]]  # only choose one for testing
-    pacmans = [pacmans[1]]
+    #layoutNames = [layoutNames[0]]  # only choose one for testing
+    #pacmans = [pacmans[1]]
     
     argsList = []
 
