@@ -139,14 +139,14 @@ def test(run=True):
     #argsOrigin['numGames'] = 100  
     #argsOrigin['display'] = textDisplay.NullGraphics()
 
-    layoutNames = ['small', 'medium','mediumHard']
+    #layoutNames = ['small', 'medium','mediumHard']
+    layoutNames = ['small', 'medium']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
         TDAgent(eps0=1e1,gamma=1),
         RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
         # alpha for w update, beta for theta update
         RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
-        TDAgent(eps0=10,gamma=1)
     ]
 
     #layoutNames = [layoutNames[0]]  # only choose one for testing
@@ -164,10 +164,11 @@ def test(run=True):
     # if run == False, this means that we will use the saved data
     if run:
         for args in argsList:
+            print(args)
             runGames(**args)
     
     for args in argsList:
-        plotGames(args, show=True)
+        plotGames(args, show=False)
 
 if __name__ == '__main__':
     """
