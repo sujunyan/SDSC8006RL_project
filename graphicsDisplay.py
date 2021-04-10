@@ -92,11 +92,12 @@ class InfoPane:
         self.height = INFO_PANE_HEIGHT
         self.fontSize = 24
         self.textColor = PACMAN_COLOR
-        self.drawPane()
 
         # self added members to be shown on the right side of score
         self.gameIdx = gameIdx
         self.totalGame = totalGame
+
+        self.drawPane()
 
     def toScreen(self, pos, y=None):
         """
@@ -114,6 +115,7 @@ class InfoPane:
     def drawPane(self):
         self.scoreText = text(self.toScreen(
             0, 0), self.textColor, "SCORE:    0", "Times", self.fontSize, "bold")
+        self.updateScore(0)
 
     def initializeGhostDistances(self, distances):
         self.ghostDistanceText = []
@@ -740,9 +742,13 @@ class PacmanGraphicsGif(PacmanGraphics):
     def __init__(self, zoom, frameTime, capture, gameIdx = 0, totalGame = 0):
         super().__init__(zoom=zoom, frameTime=frameTime, capture=capture, gameIdx=gameIdx, totalGame=totalGame)
         self.frames = []
+        self.isFirst = True
 
 
     def update(self, newState):
+        if self.isFirst:
+            self.isFirst = False
+            self.storeFrames()
         super().update(newState)
         self.storeFrames()
 

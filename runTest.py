@@ -65,7 +65,11 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
         games.append(game)
 
         if not beQuiet:
-            frames.extend(game.display.frames)
+            newFrames = game.display.frames
+            nFrameToPause = 5
+            frames.extend([newFrames[0] for i in range(nFrameToPause)])
+            frames.extend(newFrames)
+            frames.extend([newFrames[-1] for i in range(nFrameToPause)])
 
         if record:
             import time
