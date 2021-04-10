@@ -2,7 +2,6 @@
 In this file, we implement our agent with Reinforcement Learning technique
 """
 
-from math import exp
 from pacman import GameState
 from game import Agent
 from util import Queue, manhattanDistance
@@ -395,7 +394,7 @@ class ActorCriticAgent(FunctionApproxAgent):
         minLog = min(logPiTheta)
         # shift the values to make it numerically stable
         logPiTheta = [ (i-minLog) for i in logPiTheta]
-        piTheta = np.array([exp(i) for i in logPiTheta])
+        piTheta = np.array([np.exp(i) for i in logPiTheta])
         probDis = piTheta / sum(piTheta)
         
         randNum = random.uniform(0,1)
