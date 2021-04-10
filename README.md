@@ -10,10 +10,6 @@ python pacman.py
 ```
 To use an example agent, run
 ```
-python pacman.py -p ReflexAgent -l smallClassic
-```
-Some useful commands stored for testing
-```
 python pacman.py -l smallClassic -p MonteCarloAgent --numTraining 5 --numGames 10 -q
 ```
 To explore more parameters, run
@@ -68,7 +64,11 @@ Options:
                         a single game [Default: 30]
 ```
 
-The main algorithm is implemented in the file RLAgents.py. One can also refer to the https://inst.eecs.berkeley.edu/~cs188/sp21/project2/ for more details.
+The main algorithm is implemented in the file RLAgents.py. One can also refer to the https://inst.eecs.berkeley.edu/~cs188/sp21/project2/ for more details. 
+
+## Results
+
+To run tests, see `runTest.py`. The results are stored in figs/ and data/
 
 ## Acknowledgement
 
