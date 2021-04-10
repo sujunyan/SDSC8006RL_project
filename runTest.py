@@ -136,20 +136,21 @@ def test(run=True):
     #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
     argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
     random.seed('sdsc8006')
-    argsOrigin['numGames'] = 100  
+    #argsOrigin['numGames'] = 100  
     #argsOrigin['display'] = textDisplay.NullGraphics()
 
-    layoutNames = ['mediumClassic', 'mediumGrid']
+    layoutNames = ['small', 'medium','mediumHard']
     pacmans = [
         RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
+        TDAgent(eps0=1e1,gamma=1),
         RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
         # alpha for w update, beta for theta update
         RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
         TDAgent(eps0=10,gamma=1)
     ]
 
-    layoutNames = [layoutNames[1]]  # only choose one for testing
-    pacmans = [pacmans[3]]
+    layoutNames = [layoutNames[0]]  # only choose one for testing
+    pacmans = [pacmans[1]]
     
     argsList = []
 
