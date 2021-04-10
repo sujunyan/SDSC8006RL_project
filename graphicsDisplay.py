@@ -17,6 +17,9 @@ import math
 import time
 from game import Directions
 
+import PIL
+import numpy as np
+
 ###########################
 #  GRAPHICS DISPLAY CODE  #
 ###########################
@@ -82,7 +85,7 @@ WALL_RADIUS = 0.15
 
 
 class InfoPane:
-    def __init__(self, layout, gridSize):
+    def __init__(self, layout, gridSize, gameIdx = 0, totalGame = 0):
         self.gridSize = gridSize
         self.width = (layout.width) * gridSize
         self.base = (layout.height + 1) * gridSize
@@ -90,6 +93,10 @@ class InfoPane:
         self.fontSize = 24
         self.textColor = PACMAN_COLOR
         self.drawPane()
+
+        # self added members to be shown on the right side of score
+        self.gameIdx = gameIdx
+        self.totalGame = totalGame
 
     def toScreen(self, pos, y=None):
         """
@@ -123,7 +130,12 @@ class InfoPane:
             self.ghostDistanceText.append(t)
 
     def updateScore(self, score):
-        changeText(self.scoreText, "SCORE: % 4d" % score)
+        if self.totalGame != 0:
+            textToDisplay = f"SCORE: {score:4d}   ({self.gameIdx:2d} /{self.totalGame:2d})"
+        else:
+            textToDisplay = f"SCORE: {score:4d}"
+
+        changeText(self.scoreText, textToDisplay, size = self.fontSize, font= 'Times', style='bold')
 
     def setTeam(self, isBlue):
         text = "RED TEAM"
@@ -159,9 +171,12 @@ class InfoPane:
     def clearMessage(self):
         pass
 
-
+"""
+This is the main class to display the games,
+The method update is called to change the canvas of tk
+"""
 class PacmanGraphics:
-    def __init__(self, zoom=1.0, frameTime=0.0, capture=False):
+    def __init__(self, zoom=1.0, frameTime=0.0, capture=False, gameIdx = 0, totalGame = 0):
         self.have_window = 0
         self.currentGhostImages = {}
         self.pacmanImage = None
@@ -169,6 +184,10 @@ class PacmanGraphics:
         self.gridSize = DEFAULT_GRID_SIZE * zoom
         self.capture = capture
         self.frameTime = frameTime
+
+        # self added members to be shown on the right side of score
+        self.gameIdx = gameIdx
+        self.totalGame = totalGame
 
     def checkNullDisplay(self):
         return False
@@ -191,7 +210,7 @@ class PacmanGraphics:
         self.width = layout.width
         self.height = layout.height
         self.make_window(self.width, self.height)
-        self.infoPane = InfoPane(layout, self.gridSize)
+        self.infoPane = InfoPane(layout, self.gridSize, gameIdx=self.gameIdx, totalGame=self.totalGame)
         self.currentState = layout
 
     def drawDistributions(self, state):
@@ -714,13 +733,44 @@ def add(x, y):
     return (x[0] + y[0], x[1] + y[1])
 
 
+class PacmanGraphicsGif(PacmanGraphics):
+    """
+    The graphics to store the gifs
+    """
+    def __init__(self, zoom, frameTime, capture, gameIdx = 0, totalGame = 0):
+        super().__init__(zoom=zoom, frameTime=frameTime, capture=capture, gameIdx=gameIdx, totalGame=totalGame)
+        self.frames = []
+
+
+    def update(self, newState):
+        super().update(newState)
+        self.storeFrames()
+
+    def storeFrames(self):
+        """
+        store the frames in a list, used latter to be converted to a gif file
+        """
+        t = time.time()
+        psFileName = f"gif/frameTmp.ps"
+        writePostscript(psFileName)
+        img = PIL.Image.open(psFileName)
+        img.load()
+        try:
+            self.frames.append(img)
+            #print(f"store frame used {time.time()-t} s")
+        except:
+            pass
+        #self.frames.append(img)
+        #os.remove(fileName)
+     
+
 # Saving graphical output
 # -----------------------
 # Note: to make an animated gif from this postscript output, try the command:
 # convert -delay 7 -loop 1 -compress lzw -layers optimize frame* out.gif
 # convert is part of imagemagick (freeware)
 
-SAVE_POSTSCRIPT = False
+SAVE_POSTSCRIPT = True
 POSTSCRIPT_OUTPUT_DIR = 'frames'
 FRAME_NUMBER = 0
 import os

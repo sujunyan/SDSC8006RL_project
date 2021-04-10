@@ -4,6 +4,7 @@ for our RL project use
 """
 
 import random
+from tkinter import Image
 from pacman import readCommand, ClassicGameRules
 import RLAgents
 from layout import getLayout
@@ -16,6 +17,9 @@ import copy
 import __main__
 import time
 
+import PIL
+from PIL import EpsImagePlugin
+EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.54.0\bin\gswin64c'
 
 def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30, **args):
     """
@@ -30,17 +34,26 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
 
     avgScore = 0
     winCnt = 0
+    numGamesToDisplay = 2
+    numGames = max(numGames,numGamesToDisplay)
+    numTraining = numGames - numGamesToDisplay
+    name =  getTitleName(pacman, layoutName, numGames)
+    # frames to be used to get gif files
+    frames = []
     for i in range(numGames):
         print(f"({i}/{numGames}) game start, avgScore {avgScore:.2f} winCnt {winCnt}")
         #beQuiet = i < numTraining
-        beQuiet = (i < numGames -1)
+        beQuiet = (i < numTraining)
         if beQuiet:
             # Suppress output and graphics
             gameDisplay = textDisplay.NullGraphics()
             rules.quiet = True
         else:
-            gameDisplay = display
+            import graphicsDisplay
+            gameDisplay = graphicsDisplay.PacmanGraphicsGif(
+            zoom=1.0, capture=False, frameTime=0.01, gameIdx=i-numTraining+1, totalGame=numGamesToDisplay)
             rules.quiet = False
+
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, beQuiet, catchExceptions)
         game.run()
@@ -50,6 +63,10 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
         avgScore = (avgScore * i +  game.state.getScore())/(i+1)
         winCnt += game.state.isWin()
         games.append(game)
+
+        if not beQuiet:
+            frames.extend(game.display.frames)
+
         if record:
             import time
             import pickle
@@ -60,22 +77,26 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
             pickle.dump(components, f)
             f.close()
 
-    if (numGames-numTraining) > 0:
-        scores = [game.state.getScore() for game in games]
-        wins = [game.state.isWin() for game in games]
-        winRate = wins.count(True) / float(len(wins))
-        print('Average Score:', sum(scores) / float(len(scores)))
-        #print('Scores:       ', ', '.join([str(score) for score in scores]))
-        print('Win Rate:      %d/%d (%.2f)' %
-              (wins.count(True), len(wins), winRate))
-        #print('Record:       ', ', '.join(
-        #    [['Loss', 'Win'][int(w)] for w in wins]))
-        ## save the result
-        name =  getTitleName(pacman, layoutName, numGames)
-        np.save(f"data/{name}.npy",{
-            'wins' : wins,
-            'scores': scores
-        }, allow_pickle=True)
+    # report and save the results
+    scores = [game.state.getScore() for game in games]
+    wins = [game.state.isWin() for game in games]
+    winRate = wins.count(True) / float(len(wins))
+    print('Average Score:', sum(scores) / float(len(scores)))
+    #print('Scores:       ', ', '.join([str(score) for score in scores]))
+    print('Win Rate:      %d/%d (%.2f)' %
+          (wins.count(True), len(wins), winRate))
+    #print('Record:       ', ', '.join(
+    #    [['Loss', 'Win'][int(w)] for w in wins]))
+    ## save the result
+
+    np.save(f"data/{name}.npy",{
+        'wins' : wins,
+        'scores': scores
+    }, allow_pickle=True)
+    #frames = [PIL.Image.fromarray(f) for f in frames]
+    if frames:
+        gifImg = frames[0]
+        gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
 
     return games
 
@@ -149,8 +170,8 @@ def test(run=True):
         RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
     ]
 
-    #layoutNames = [layoutNames[0]]  # only choose one for testing
-    #pacmans = [pacmans[1]]
+    layoutNames = [layoutNames[0]]  # only choose one for testing
+    pacmans = [pacmans[1]]
     
     argsList = []
 
