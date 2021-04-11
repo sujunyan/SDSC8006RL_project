@@ -267,7 +267,7 @@ def getGif(args):
         imgTmp = imgDict[(iGame,1)]
         # at the begining, pause a little for user experience
         frames.extend([imgTmp for i in range(nFrameToPause)])
-        iFrame = 0
+        iFrame = 1
         while True:
             #print(f"adding frame ({iGame},{iFrame})")
             iFrame +=1
@@ -282,7 +282,10 @@ def getGif(args):
 
     frames = [PIL.Image.fromarray(f) for f in frames]
     gifImg = frames[0]
-    gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
+    duration = 100
+    if args['layoutName'] == 'mediumHard':
+        duration = 40
+    gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=duration, loop=0)
 
 if __name__ == '__main__':
     """
