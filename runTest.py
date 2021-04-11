@@ -116,7 +116,7 @@ def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTra
         else:
             import graphicsDisplay
             gameDisplay = graphicsDisplay.PacmanGraphicsGif(
-                zoom=1.0, capture=False, frameTime=0.01, storeFrameDir=frameDir, gameIdx=i-numTraining+1, totalGame=numGamesToDisplay)
+                zoom=1.0, capture=False, frameTime=0.001, storeFrameDir=frameDir, gameIdx=i-numTraining+1, totalGame=numGamesToDisplay)
             rules.quiet = False
 
         game = rules.newGame(layout, pacman, ghosts,
@@ -216,7 +216,6 @@ def plotAll(layoutNames, pacmans, numGames, show = False):
     if show:
         plt.show()
         
-
 def plotGames(args, show = False):
     """
     plot games
@@ -256,10 +255,10 @@ def getGif(args):
         gameIdx = int(fName_s[1])
         frameIdx = int(fName_s[2])
         gameTotal = max(gameTotal,gameIdx)
-        imgTmp = PIL.Image.open(f"{frameDir}/{fName}")
-        imgTmp.load()
-        imgDict[(gameIdx,frameIdx)] = imgTmp
-    
+        img = PIL.Image.open(f"{frameDir}/{fName}")
+        # to avoid open too many files
+        imgDict[(gameIdx,frameIdx)] = np.asarray(img)
+        img.close()
     
     nFrameToPause = 5
     keys = imgDict.keys()
@@ -280,10 +279,9 @@ def getGif(args):
             imgTmp = imgDict[key]
             frames.append(imgTmp)
 
+    frames = [PIL.Image.fromarray(f) for f in frames]
     gifImg = frames[0]
     gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
-    for img in frames:
-        img.close()
 
 if __name__ == '__main__':
     """
