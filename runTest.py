@@ -4,42 +4,107 @@ for our RL project use
 """
 
 import random
-from tkinter import Image
-from pacman import readCommand, ClassicGameRules
-import RLAgents
+from pacman import ClassicGameRules, default, loadAgent, parseAgentArgs
+import layout
 from layout import getLayout
+import RLAgents
 from tdAgents import TDAgent
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
+import sys,os
 import textDisplay
 import copy
 import __main__
 import time
-
 import PIL
 from PIL import EpsImagePlugin
-EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.54.0\bin\gswin64c'
 
-def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30, **args):
+
+def readCommand(argv):
+    """
+    Processes the command used to run pacman from the command line.
+    """
+    from optparse import OptionParser
+    usageStr = """
+    USAGE:      python pacman.py <options>
+    EXAMPLES:   (1) python pacman.py
+                    - starts an interactive game
+                (2) python pacman.py --layout smallClassic --zoom 2
+                OR  python pacman.py -l smallClassic -z 2
+                    - starts an interactive game on a smaller board, zoomed in
+    """
+    parser = OptionParser(usageStr)
+
+    parser.add_option('-n', '--numGames', dest='numGames', type='int', default=10,
+                      help=default('the number of GAMES to play'), metavar='GAMES')
+    parser.add_option('--numDisplay', dest='numDisplay', type='int', default=3,
+                      help=default('the number of GAMES to display'))
+    parser.add_option('-l', '--layout', dest='layout', default = 'small',
+                      help=default('the index of LAYOUT_FILE from which to load the map layout'))
+    parser.add_option('-p', '--pacman', dest='pacman', default='MC',
+                      help=default('the agent in the pacmanAgents module to use'))
+    parser.add_option('-a', '--all', dest='testAll', action='store_true', default=False,
+                      help=default('if we want to test all the parameters'))
+    parser.add_option('-s', '--showPlot', dest='showPlot', action='store_true', default=False,
+                      help=default('If we want to show the plot of the result'))
+    parser.add_option('--norun', dest='noRun', action='store_true', default=False,
+                      help=default('If run the game'))
+
+    parser.add_option('--savegif', dest='savegif', action='store_true', default=False,
+                      help=default('If save the gif files'))
+
+    options, otherjunk = parser.parse_args(argv)
+
+    if len(otherjunk) != 0:
+        raise Exception('Command line input not understood: ' + str(otherjunk))
+
+    args = dict()
+    
+
+
+    ghostType = loadAgent('RandomGhost', False)
+    args['ghosts'] = [ghostType(i+1) for i in range(10)]
+    args['numGames'] = options.numGames
+    args['numGamesToDisplay'] = options.numDisplay
+    argsList = []
+    if options.testAll:
+        for layout in layouts:
+            for pacman in pacmans.values():
+                argsTmp = copy.deepcopy(args)
+                argsTmp['layoutName'] = layout
+                argsTmp['pacman'] = pacman
+                argsList.append(argsTmp)
+    else:
+        args['layoutName'] = options.layout
+        args['pacman'] = pacmans[options.pacman]
+        argsList.append(args)
+
+    return (argsList, options)
+
+def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTraining=0, catchExceptions=False, timeout=30, **args):
     """
     A copy of same function in pacman.py
     """
-    __main__.__dict__['_display'] = display
+    #__main__.__dict__['_display'] = display
 
     layout = getLayout(layoutName)
     rules = ClassicGameRules(timeout)
     games = []
 
-
     avgScore = 0
     winCnt = 0
-    numGamesToDisplay = 2
     numGames = max(numGames,numGamesToDisplay)
     numTraining = numGames - numGamesToDisplay
     name =  getTitleName(pacman, layoutName, numGames)
-    # frames to be used to get gif files
-    frames = []
+    frameDir = f"gif/{name}"
+
+
+    import shutil
+    # delete older dir
+    if os.path.exists(frameDir):
+        shutil.rmtree(frameDir)
+    os.mkdir(frameDir)
+
     for i in range(numGames):
         print(f"({i}/{numGames}) game start, avgScore {avgScore:.2f} winCnt {winCnt}")
         #beQuiet = i < numTraining
@@ -51,36 +116,25 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
         else:
             import graphicsDisplay
             gameDisplay = graphicsDisplay.PacmanGraphicsGif(
-            zoom=1.0, capture=False, frameTime=0.01, gameIdx=i-numTraining+1, totalGame=numGamesToDisplay)
+                zoom=1.0, capture=False, frameTime=0.01, storeFrameDir=frameDir, gameIdx=i-numTraining+1, totalGame=numGamesToDisplay)
             rules.quiet = False
 
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, beQuiet, catchExceptions)
         game.run()
-        #if not beQuiet:
-        #    games.append(game)
 
         avgScore = (avgScore * i +  game.state.getScore())/(i+1)
         winCnt += game.state.isWin()
         games.append(game)
 
-        if not beQuiet:
-            newFrames = game.display.frames
-            nFrameToPause = 5
-            frames.extend([newFrames[0] for i in range(nFrameToPause)])
-            frames.extend(newFrames)
-            frames.extend([newFrames[-1] for i in range(nFrameToPause)])
+        #if not beQuiet:
+        #    newFrames = game.display.frames
+        #    nFrameToPause = 5
+        #    frames.extend([newFrames[0] for i in range(nFrameToPause)])
+        #    frames.extend(newFrames)
+        #    frames.extend([newFrames[-1] for i in range(nFrameToPause)])
 
-        if record:
-            import time
-            import pickle
-            fname = ('recorded-game-%d' % (i + 1)) + \
-                '-'.join([str(t) for t in time.localtime()[1:6]])
-            f = file(fname, 'w')
-            components = {'layout': layout, 'actions': game.moveHistory}
-            pickle.dump(components, f)
-            f.close()
-
+    # end of simulation of games
     # report and save the results
     scores = [game.state.getScore() for game in games]
     wins = [game.state.isWin() for game in games]
@@ -98,13 +152,13 @@ def runGames(layoutName, pacman, ghosts, display, numGames, record, numTraining=
         'scores': scores
     }, allow_pickle=True)
     #frames = [PIL.Image.fromarray(f) for f in frames]
-    if frames:
-        gifImg = frames[0]
-        gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
+    #if frames:
+    #    gifImg = frames[0]
+    #    gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
 
     return games
 
-def getTitleName(pacman,layoutName,numGames, **args):
+def getTitleName(pacman, layoutName, numGames, **args):
     """
     get the title name for each argument specification
     """
@@ -113,10 +167,10 @@ def getTitleName(pacman,layoutName,numGames, **args):
 
     return titleName
 
-def plotGames(args, show = False):
+def getPlotData(args):
     """
-    plot games
-    """ 
+    get the plot data
+    """
     titleName = getTitleName(**args)
     dic = np.load(f"data/{titleName}.npy", allow_pickle=True).item()
     scores = dic['scores']
@@ -137,6 +191,48 @@ def plotGames(args, show = False):
         #avgScoreList.append(np.mean(scoreToLookAt))
         avgScoreList.append(avgScoreList[-1]*(i-1)/i + scores[i]/i)
         winRateList.append(winCnt/(i+1))
+    return (avgScoreList, winRateList)
+
+def plotAll(layoutNames, pacmans, numGames, show = False):
+    """
+    plot all games in argsList in a single file
+    """
+    
+    args = dict()
+    args['numGames'] = numGames
+    for layoutName in layoutNames:
+        plt.figure(figsize=(14,6))
+        plt.subplot(121)
+        plt.xlabel("number of games")
+        plt.ylabel("average score")
+        plt.subplot(122)
+        plt.xlabel("number of games")
+        plt.ylabel("winning rate")
+        for pacman in pacmans:
+            args['pacman'] = pacman
+            args['layoutName'] = layoutName
+            avgScoreList, winRateList = getPlotData(args) 
+            label = type(pacman).__name__
+            plt.subplot(121)
+            plt.plot(avgScoreList, label=label)
+            plt.subplot(122)
+            plt.plot(winRateList, label=label)
+
+        for opt in [121, 122]:
+            plt.subplot(opt)
+            plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25), ncol=2, fancybox=True, shadow=True)
+
+        plt.savefig(f"figs/total.n={args['numGames']}.{layoutName}.pdf",bbox_inches='tight')
+    
+    if show:
+        plt.show()
+        
+
+def plotGames(args, show = False):
+    """
+    plot games
+    """ 
+    avgScoreList, winRateList = getPlotData(args) 
 
     plt.figure(figsize=(14,6))
     plt.subplot(121)
@@ -149,56 +245,86 @@ def plotGames(args, show = False):
     plt.ylabel("winning rate")
 
     titleName = getTitleName(**args)
-
     plt.savefig(f"figs/{titleName}.pdf",bbox_inches='tight')
     if show:
         plt.show()
         
-def test(run=True):
+def getGif(args):
     """
+    convert the frames to a gif file
     """
-    # manually set the parameters here, please comment it out if you want to set them from command line
-    #def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
-    argsOrigin = readCommand(sys.argv[1:])  # Get game components based on input
-    random.seed('sdsc8006')
-    #argsOrigin['numGames'] = 100  
-    #argsOrigin['display'] = textDisplay.NullGraphics()
-
-    #layoutNames = ['small', 'medium','mediumHard']
-    layoutNames = ['small', 'medium']
-    pacmans = [
-        RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
-        TDAgent(eps0=1e1,gamma=1),
-        RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
-        # alpha for w update, beta for theta update
-        RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
-    ]
-
-    layoutNames = [layoutNames[0]]  # only choose one for testing
-    pacmans = [pacmans[1]]
+    from os import listdir
+    from os.path import isfile, join
+    name = getTitleName(**args)
+    frameDir = f"gif/{name}"
+    files = [f for f in listdir(frameDir) if isfile(join(frameDir, f))]
+    gameTotal = 0
+    imgDict = dict()
+    frames = []
+    for i,fName in enumerate(files):
+        print(f"In getGif, loading {i}/{len(files)} files")
+        fName_s = fName.split(".")
+        gameIdx = int(fName_s[1])
+        frameIdx = int(fName_s[2])
+        gameTotal = max(gameTotal,gameIdx)
+        imgTmp = PIL.Image.open(f"{frameDir}/{fName}")
+        imgTmp.load()
+        imgDict[(gameIdx,frameIdx)] = imgTmp
     
-    argsList = []
-
-    for pacman in pacmans:
-        for layoutName in layoutNames:
-            argsTmp = copy.deepcopy(argsOrigin)
-            argsTmp['pacman'] = pacman
-            argsTmp['layoutName'] = layoutName
-            argsList.append(argsTmp)
-
-    # if run == False, this means that we will use the saved data
-    if run:
-        for args in argsList:
-            print(args)
-            runGames(**args)
     
-    for args in argsList:
-        plotGames(args, show=False)
+    nFrameToPause = 5
+    keys = imgDict.keys()
+    for iGame in range(1,gameTotal+1):
+        imgTmp = imgDict[(iGame,1)]
+        # at the begining, pause a little for user experience
+        frames.extend([imgTmp for i in range(nFrameToPause)])
+        iFrame = 0
+        while True:
+            #print(f"adding frame ({iGame},{iFrame})")
+            iFrame +=1
+            key = (iGame,iFrame)
+            # this reach the end of the current game
+            if key not in keys:
+                # append last frames to pause
+                frames.extend([imgTmp for i in range(nFrameToPause)])
+                break
+            imgTmp = imgDict[key]
+            frames.append(imgTmp)
+
+    gifImg = frames[0]
+    gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
 
 if __name__ == '__main__':
     """
     """
-    np.seterr(all='raise')
     start = time.time()
-    test(run=True)
+
+    EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.54.0\bin\gswin64c'
+    np.seterr(all='raise')
+    random.seed('sdsc8006')
+
+    layouts = ['small', 'medium']
+    pacmans = {
+        'MC' : RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
+        'TD' : TDAgent(eps0=1e1,gamma=1),
+        #'QL' : RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
+        # alpha for w update, beta for theta update
+        #'AC'   : RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
+    }
+
+    argsList, options = readCommand(sys.argv[1:])
+
+    if not options.noRun:
+        for args in argsList:
+            print(args)
+            runGames(**args)
+    
+    if options.testAll:
+        plotAll(layouts, pacmans.values(), options.numGames, show=options.showPlot)
+    
+    for args in argsList:
+        if options.savegif:
+            getGif(args)
+        plotGames(args, options.showPlot)
+
     print(f"time used {time.time() - start:.2f} s")

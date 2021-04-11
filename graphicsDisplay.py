@@ -739,10 +739,13 @@ class PacmanGraphicsGif(PacmanGraphics):
     """
     The graphics to store the gifs
     """
-    def __init__(self, zoom, frameTime, capture, gameIdx = 0, totalGame = 0):
+    def __init__(self, zoom, frameTime, capture, storeFrameDir, gameIdx = 0, totalGame = 0, frameIdx = 0):
         super().__init__(zoom=zoom, frameTime=frameTime, capture=capture, gameIdx=gameIdx, totalGame=totalGame)
         self.frames = []
         self.isFirst = True
+        self.frameIdx = frameIdx
+        # the folder to store the temporary frame files
+        self.storeFrameDir = storeFrameDir
 
 
     def update(self, newState):
@@ -756,18 +759,9 @@ class PacmanGraphicsGif(PacmanGraphics):
         """
         store the frames in a list, used latter to be converted to a gif file
         """
-        t = time.time()
-        psFileName = f"gif/frameTmp.ps"
+        self.frameIdx +=1
+        psFileName = f"{self.storeFrameDir}/frameTmp.{self.gameIdx}.{self.frameIdx}.ps"
         writePostscript(psFileName)
-        img = PIL.Image.open(psFileName)
-        try:
-            img.load()
-            self.frames.append(img)
-            #print(f"store frame used {time.time()-t} s")
-        except:
-            pass
-        #self.frames.append(img)
-        #os.remove(fileName)
      
 
 # Saving graphical output

@@ -11,11 +11,12 @@
       //"program": "${file}",
       "program": "runTest.py",
       "args": [
+          "--norun"
         //"-l","smallClassic",
         //"-l","testClassic",
-        "-p","MonteCarloAgent",
+        //"-p","MonteCarloAgent",
         //"--numTraining","200",
-        "--numGames","10",
+        //"--numGames","10",
         //"--agentArgs","eps0=1,gamma=0.9999",
         //"--quietTextGraphics",
         //"--fixRandomSeed",
