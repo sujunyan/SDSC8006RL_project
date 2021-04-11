@@ -37,7 +37,7 @@ def readCommand(argv):
 
     parser.add_option('-n', '--numGames', dest='numGames', type='int', default=10,
                       help=default('the number of GAMES to play'), metavar='GAMES')
-    parser.add_option('--numDisplay', dest='numDisplay', type='int', default=3,
+    parser.add_option('--numDisplay', dest='numDisplay', type='int', default=10,
                       help=default('the number of GAMES to display'))
     parser.add_option('-l', '--layout', dest='layout', default = 'small',
                       help=default('the index of LAYOUT_FILE from which to load the map layout'))
@@ -93,9 +93,9 @@ def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTra
 
     avgScore = 0
     winCnt = 0
+    name =  getTitleName(pacman, layoutName, numGames)
     numGames = max(numGames,numGamesToDisplay)
     numTraining = numGames - numGamesToDisplay
-    name =  getTitleName(pacman, layoutName, numGames)
     frameDir = f"gif/{name}"
 
 
@@ -293,6 +293,8 @@ def getGif(args):
 
     gifImg = frames[0]
     gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
+    for img in frames:
+        img.close()
 
 if __name__ == '__main__':
     """
@@ -307,9 +309,9 @@ if __name__ == '__main__':
     pacmans = {
         'MC' : RLAgents.MonteCarloAgent(eps0=1e1,gamma=1),
         'TD' : TDAgent(eps0=1e1,gamma=1),
-        #'QL' : RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
+        'QL' : RLAgents.QLearningAgent(eps0=1, gamma=1, alpha=1e-4),
         # alpha for w update, beta for theta update
-        #'AC'   : RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
+        'AC'   : RLAgents.ActorCriticAgent(gamma=1, alpha=1e-4, beta=1e-4),
     }
 
     argsList, options = readCommand(sys.argv[1:])
