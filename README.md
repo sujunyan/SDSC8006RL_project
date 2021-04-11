@@ -27,6 +27,8 @@ Our tests are implemented in the script `runTest.py`. The results will be stored
 
 ![Qsmall](gif/n=1000.small.QLearningAgent.gif)
 
+![Qmedium](gif/n=1000.medium.QLearningAgent.gif)
+
 ## Acknowledgement
 
 This project is built on top of the code framework of the link https://inst.eecs.berkeley.edu/~cs188/sp21/project2/ (c.f. LICENSE file). 
