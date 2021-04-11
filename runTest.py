@@ -127,13 +127,6 @@ def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTra
         winCnt += game.state.isWin()
         games.append(game)
 
-        #if not beQuiet:
-        #    newFrames = game.display.frames
-        #    nFrameToPause = 5
-        #    frames.extend([newFrames[0] for i in range(nFrameToPause)])
-        #    frames.extend(newFrames)
-        #    frames.extend([newFrames[-1] for i in range(nFrameToPause)])
-
     # end of simulation of games
     # report and save the results
     scores = [game.state.getScore() for game in games]
@@ -151,10 +144,6 @@ def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTra
         'wins' : wins,
         'scores': scores
     }, allow_pickle=True)
-    #frames = [PIL.Image.fromarray(f) for f in frames]
-    #if frames:
-    #    gifImg = frames[0]
-    #    gifImg.save(f"gif/{name}.gif", format="GIF", append_images=frames, save_all=True, duration=100, loop=0)
 
     return games
 
@@ -302,7 +291,7 @@ if __name__ == '__main__':
     start = time.time()
 
     EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.54.0\bin\gswin64c'
-    np.seterr(all='raise')
+    ##np.seterr(all='raise')
     random.seed('sdsc8006')
 
     layouts = ['small', 'medium']
