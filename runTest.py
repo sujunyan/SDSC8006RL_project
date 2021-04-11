@@ -102,6 +102,7 @@ def runGames(layoutName, pacman, ghosts, numGames, numGamesToDisplay = 1 ,numTra
     import shutil
     # delete older dir
     if os.path.exists(frameDir):
+        input("FrameDir exist, confirm to delete it")
         shutil.rmtree(frameDir)
     os.mkdir(frameDir)
 
