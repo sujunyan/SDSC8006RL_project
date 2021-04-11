@@ -21,7 +21,11 @@ The main algorithm is implemented in the file RLAgents.py. One can also refer to
 
 ## Results
 
-To run tests, see `runTest.py`. The results are stored in figs/ and data/
+Our tests are implemented in the script `runTest.py`. The results will be stored in figs/ , data/ and gif/.
+
+### results of Q-learning after 1000 games
+
+![Qsmall](gif/n=1000.small.QLearningAgent.gif)
 
 ## Acknowledgement
 
